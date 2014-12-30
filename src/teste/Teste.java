@@ -9,9 +9,7 @@ package teste;
  *
  * @author andrei
  */
-import Data.Data;
 import Data.Photo;
-import Gerencia.Gerencia;
 import Gerencia.GerenciaGetTag;
 import Gerencia.Instagram;
 import Gerencia.MetodosAdicionais;
@@ -20,17 +18,14 @@ import au.com.bytecode.opencsv.CSVWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import org.json.JSONObject;
 
 public class Teste {
@@ -47,7 +42,7 @@ public class Teste {
         //padrão
         int quantidadeBaixadas = 100;
 
-        String tag = "ene   m";
+        String tag = "enem";
         int minutosAnalise = 60 * 1;
         char separatorCSV = ',';
         
@@ -328,5 +323,49 @@ public class Teste {
         new MetodosAdicionais()
                 .download(mainDir + "images_download.csv", "", imagesDir,separatorCSV);
 
+    }
+    
+    
+    public static Map<String, String> getParameters(String args[],HashSet<String> allparameters) {
+        
+        String key;
+        String value ;
+        Map<String, String> parameters = new HashMap<>();
+        if (args.length<2){
+            key = args[0];
+            if (key.toLowerCase().contains("--help")||key.toLowerCase().contains("-h")){
+                help(allparameters);
+                System.exit(0);
+            }
+        }
+        for (int i = 0; i < args.length - 1; i++) {
+
+            key = args[i];
+            value = args[i + 1];
+            i++;
+            
+            
+            if (allparameters.contains(key) && (!allparameters.contains(value))) {
+                parameters.put(key, value);
+            } else {
+                System.out.println("unknown option: \"" + key + " " + value+"\"");
+                System.out.println("usage: ");
+                for(String parameter:allparameters)
+                    System.out.print("[" + parameter + "] ");
+            
+            
+                System.exit(1);
+            }
+        }
+
+        return parameters;
+    }
+    
+    public static void help(HashSet<String> allparameters){
+        System.out.println("usage: ");
+                for(String parameter:allparameters)
+                    System.out.print("[" + parameter + "] ");
+            
+        
     }
 }
