@@ -174,7 +174,6 @@ public class Teste {
         
         
         try {
-            cSVWriter_data = new CSVWriter(new FileWriter(new File(directory + output)), separator, '\0', '\0');
             cSVWriter_data = new CSVWriter(new FileWriter(new File(directory + output)), separator, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER);
             cSVWriter_links = new CSVWriter(new FileWriter(new File(directory + "links.csv")), separator);
             cSVWriter_images_download = new CSVWriter(new FileWriter(new File(directory + "images_download.csv")), separator);
