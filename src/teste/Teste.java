@@ -30,57 +30,86 @@ import org.json.JSONObject;
 
 public class Teste {
 
+    static String fileSeparator = System.getProperty("file.separator");
+
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
 
-        long currentTimestamp = System.currentTimeMillis() / 1000 ;
-        long targetTimestamp = 0;
+        //teste
+        args = new String[]{"--tag", "bolsonaro", "--minutos", "500000", "--directory", "teste"};
 
-        //padrão
+        HashSet<String> allparameters = new HashSet<>();
+        allparameters.add("--tag");
+        allparameters.add("-t");
+        allparameters.add("--minutos");
+        allparameters.add("-m");
+        allparameters.add("--userblock");
+        allparameters.add("-B");
+        allparameters.add("--output");
+        allparameters.add("-o");
+        allparameters.add("--directory");
+        allparameters.add("-D");
+        allparameters.add("--separator");
+        allparameters.add("-s");
+        allparameters.add("--time");
+        allparameters.add("-T");
+        
+
+        Map<String, String> parameters = getParameters(args, allparameters);
+
+        //inicialização padrão
+        String tag = "labic";
+        //string int
+        String minutos = "60";
+        String userblock = "userblock.txt";
+
+        Calendar calendar = Calendar.getInstance();
+        String output = String.valueOf(calendar.get(Calendar.YEAR)) + "-" + String.valueOf(calendar.get(Calendar.MONTH)) + "-" + String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "_" + calendar.get(Calendar.HOUR_OF_DAY) + "h" + calendar.get(Calendar.MINUTE) + "m" + calendar.get(Calendar.SECOND) + "s.csv";
+
+        String directory = "";
+        char separator = ',';
         int quantidadeBaixadas = 100;
 
-        String tag = "enem";
-        int minutosAnalise = 60 * 1;
-        char separatorCSV = ',';
-        
-        
+        long currentTimestamp = System.currentTimeMillis() / 1000;
+        long targetTimestamp = 0;
+        long timefinal = 0;
+
+        //fazer um código que ler do arquivo txt
         ArrayList<String> blocks = new ArrayList<>();
-        
         blocks.add("oficialyasmin");
         blocks.add("haroldocerqueiira");
 
-        Calendar calendar = Calendar.getInstance();
-        int ano = calendar.get(Calendar.YEAR);
-        int mes = calendar.get(Calendar.MONTH);
-        int dia = calendar.get(Calendar.DAY_OF_MONTH);
-        int hora = calendar.get(Calendar.HOUR_OF_DAY);
+        tag = setParameter("--tag", tag, parameters);
+        tag = setParameter("-t", tag, parameters);
 
-        System.out.println();
-        System.out.println();
-        String fileName = String.valueOf(ano) + "-" + String.valueOf(mes) + "-" + String.valueOf(dia) + "_horario=" + 2 + hora + "h.csv";
+        minutos = setParameter("--minutos", minutos, parameters);
+        minutos = setParameter("-m", minutos, parameters);
 
-        if (args.length > 0) {
-            tag = args[0];
+        userblock = setParameter("--userblock", userblock, parameters);
+        userblock = setParameter("-B", userblock, parameters);
 
-            if (args.length > 1) {
-                minutosAnalise = Integer.parseInt(args[1]);
+        output = setParameter("--output", output, parameters);
+        output = setParameter("-o", output, parameters);
+        
+        timefinal = Long.valueOf(setParameter("--time", String.valueOf(timefinal), parameters));
+        timefinal = Long.valueOf(setParameter("-T", String.valueOf(timefinal), parameters));
+        
 
-            }
-
-            if (args.length > 2) {
-                fileName = args[2] + ".csv";
-
-            }
-            if(args.length > 3)
-            {
-                System.out.println(args[3]);
-                separatorCSV = args[3].charAt(0);
-            }
-
+        directory = setParameter("--directory", directory, parameters);
+        directory = setParameter("-d", directory, parameters);
+        if (!directory.equalsIgnoreCase("")) {
+            directory = directory + fileSeparator;
         }
+
+        separator = setParameter("--separator", String.valueOf(separator), parameters).toCharArray()[0];
+        separator = setParameter("-s", String.valueOf(separator), parameters).toCharArray()[0];
+
+        output = tag + "_" + output;
+
+        int minutosAnalise = Integer.parseInt(minutos);
 
         System.out.println(currentTimestamp);
 
@@ -93,15 +122,12 @@ public class Teste {
 
         GerenciaGetTag gerenciaGetTag = new GerenciaGetTag();
 
-        String fileSeparator = System.getProperty("file.separator");
-        String mainDir = "/var/www/hash-web/public/instagram" + fileSeparator;
+        String imagesDir = directory + "images" + fileSeparator;
 
-        String imagesDir = mainDir + "images" + fileSeparator;
-
-        File pasta = new File(mainDir);
+        File pasta = new File(directory);
 
         if (!pasta.exists()) {
-            new File(mainDir).mkdir();
+            new File(directory).mkdir();
 
             pasta.mkdir();
 //            System.out.println(pasta.getAbsolutePath() +file_separador +"download"+file_separador);
@@ -118,7 +144,7 @@ public class Teste {
         }
 
         System.out.println(
-                "mainDir:    " + mainDir);
+                "mainDir:    " + directory);
         System.out.println(
                 "imagesDir:  " + imagesDir);
 
@@ -134,22 +160,24 @@ public class Teste {
                 "tag:    " + tempMedia_count.getString("name"));
 
         int media_count = tempMedia_count.getInt("media_count");
-
+        System.out.println("total media:    "+media_count);
         //System.out.println("quantidade de midias:   " + quantidadeBaixadas);
         double horas = quantidadeBaixadas * (1.1 / 6000);
-        double minutos = ((horas - (long) horas) * 60);
-        double segundos = (minutos - (long) minutos) * 60;
+        double minutes = ((horas - (long) horas) * 60);
+        double segundos = (minutes - (long) minutes) * 60;
 //        System.out.println(segundos);
         // System.out.println("tempo aproximado de coleta: " + (long) horas + " horas " + (long) minutos + " minutos e " + (long) segundos + " segundos");
 
         CSVWriter cSVWriter_data = null;
         CSVWriter cSVWriter_links = null;
         CSVWriter cSVWriter_images_download = null;
-
+        
+        
         try {
-            cSVWriter_data = new CSVWriter(new FileWriter(new File(mainDir + fileName)),separatorCSV, '\0', '\0');
-            cSVWriter_links = new CSVWriter(new FileWriter(new File(mainDir + "links.csv")),separatorCSV);
-            cSVWriter_images_download = new CSVWriter(new FileWriter(new File(mainDir + "images_download.csv")),separatorCSV);
+            cSVWriter_data = new CSVWriter(new FileWriter(new File(directory + output)), separator, '\0', '\0');
+            cSVWriter_data = new CSVWriter(new FileWriter(new File(directory + output)), separator, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER);
+            cSVWriter_links = new CSVWriter(new FileWriter(new File(directory + "links.csv")), separator);
+            cSVWriter_images_download = new CSVWriter(new FileWriter(new File(directory + "images_download.csv")), separator);
 
             String[] fistLine = {"url", "user_username", "like", "link", "location_name", "location_id", "location_latitude", "location_longitude", "filter", "created_time", "user_profile_picture", "user_full_name", "user_id", "data_legivel"};
 
@@ -157,39 +185,37 @@ public class Teste {
 
         } catch (IOException iOException) {
 
-            System.out.println("error 1: falha ao tentar criar os arquivos de escrita, verifique a sua permissão de usuário.");
+            System.out.println("error 1: falha ao tentar criar os arquivos de escrita, verifique a sua permissão de usuário e/ou se a pasta existe.");
             System.exit(1);
         }
 
         int sizeFor = quantidadeBaixadas / 20;
 
         if (sizeFor
-                < 1) {  
+                < 1) {
             sizeFor = 1;
         }
         int i = 0;
 
-        
-         
-                    ArrayList<String > caracteresMalucos = new ArrayList<>();
-                    caracteresMalucos.add("\\|");
-                    caracteresMalucos.add("\\,");
-                    caracteresMalucos.add(String.valueOf(separatorCSV));
-                    caracteresMalucos.add(String.valueOf("\""));
-                    caracteresMalucos.add(String.valueOf("'"));
-                    caracteresMalucos.add(String.valueOf("\'"));
-                    caracteresMalucos.add(String.valueOf("\n"));
-                    caracteresMalucos.add(String.valueOf("\t"));
-                    caracteresMalucos.add(String.valueOf("\r"));
-                    caracteresMalucos.add(String.valueOf("\b"));
-                    
+        ArrayList<String> caracteresMalucos = new ArrayList<>();
+        caracteresMalucos.add("\\|");
+        caracteresMalucos.add("\\,");
+        caracteresMalucos.add(String.valueOf(separator));
+        caracteresMalucos.add(String.valueOf("\""));
+        caracteresMalucos.add(String.valueOf("'"));
+        caracteresMalucos.add(String.valueOf("\'"));
+        caracteresMalucos.add(String.valueOf("\n"));
+        caracteresMalucos.add(String.valueOf("\t"));
+        caracteresMalucos.add(String.valueOf("\r"));
+        caracteresMalucos.add(String.valueOf("\b"));
+
         do {
 
             cSVWriter_links.writeNext(new String[]{tagsRecents.getPagination().getNext_url()});
             System.out.println("numero midias:" + i * 20 + "    ");
             try {
                 if (code == 429) {
-                    new MetodosAdicionais().download(mainDir + "images_download.csv", "", imagesDir,separatorCSV);
+                    new MetodosAdicionais().download(directory + "images_download.csv", "", imagesDir, separator);
                     System.err.println("error_message: The maximum number of requests per hour has been exceeded.");
 
                     try {
@@ -213,54 +239,55 @@ public class Teste {
 
 //                System.out.println("progresso: " + (i * 100.0 / (sizeFor)) + "%");
                 for (Photo p : tagsRecents.getData().getPhoto()) {
-                    String tempUser = p.getUser().getUsername().toLowerCase();                    
-                    
-                    if (blocks.contains(tempUser))
-                    {
+                    String tempUser = p.getUser().getUsername().toLowerCase();
+
+                    if (blocks.contains(tempUser)) {
                         continue;
                     }
-                    
-                    String tempUserFullName = p.getUser().getFull_name().replaceAll("\"", "");
-                    
-                    
-                        
-                   
-                    
-                    targetTimestamp = Long.parseLong(p.getCreated_time());                                                                                                                                                    //,"location_name","location_id","location_latitude","location_longitude","filter","created_time","user_profile_picture","user_full_name","user_id","data_legivel"}
 
+                    String tempUserFullName = p.getUser().getFull_name().replaceAll("\"", "");
+
+                    targetTimestamp = Long.parseLong(p.getCreated_time());
+
+                    if (p.getComments().getCount() > 0) {
+                        long last_targetTimestamp = Long.parseLong(p.getComments().getData().get(0).getCreated_time());
+
+                        targetTimestamp = last_targetTimestamp;
+
+                    }
+
+                    //,"location_name","location_id","location_latitude","location_longitude","filter","created_time","user_profile_picture","user_full_name","user_id","data_legivel"}
                     calendar.setTimeInMillis(targetTimestamp);
 
-                    Date date = new Date(targetTimestamp * 1000 + 3600*1000*2);
+                    Date date = new Date(targetTimestamp * 1000);
                     DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy - HH:mm:ss");
 
                     //calendar.
                     String dataLegivel = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "-" + String.valueOf(calendar.get(Calendar.MONTH) + 1) + "-" + String.valueOf(calendar.get(Calendar.YEAR)) + " - " + String.valueOf(calendar.get(Calendar.HOUR_OF_DAY)) + ":" + String.valueOf(calendar.get(Calendar.MINUTE)) + ":" + String.valueOf(calendar.get(Calendar.SECOND));
                     dataLegivel = dateFormat.format(date);
-                    System.out.println(dataLegivel);
-                    
-                    
-                   
-                    
+                    System.out.print(dataLegivel + " ");
+                    System.out.println(targetTimestamp);
+
                     String[] tempLine = {p.getImages().getLow_resolution().getUrl(), p.getUser().getUsername(), String.valueOf(p.getLikes().getCount()), p.getLink(), p.getLocation().getName(), p.getLocation().getId(), p.getLocation().getLatitude(), p.getLocation().getLongitude(), p.getFilter(), p.getCreated_time(), p.getUser().getProfile_picture(), tempUserFullName, p.getUser().getId(), dataLegivel};
-                    
-                   /*
+
+                    /*
                      for (int k=0 ; k<tempLine.length ; k ++)
-                    {
-                       String tempElementLine = tempLine[k];
+                     {
+                     String tempElementLine = tempLine[k];
                        
                        
-                        for (String caracteresMaluco : caracteresMalucos) {
+                     for (String caracteresMaluco : caracteresMalucos) {
                             
-                            if (tempElementLine.contains(caracteresMaluco)){
-                                tempLine[k] = tempElementLine.replaceAll(caracteresMaluco, "");
-                            }
+                     if (tempElementLine.contains(caracteresMaluco)){
+                     tempLine[k] = tempElementLine.replaceAll(caracteresMaluco, "");
+                     }
                                 
-                        }
-                    }
-                    System.out.println(tempLine.length);
-                    System.out.println(caracteresMalucos.size());
+                     }
+                     }
+                     System.out.println(tempLine.length);
+                     System.out.println(caracteresMalucos.size());
                     
-                    */
+                     */
                     if (p.getType().compareTo("image") == 0) {
                         cSVWriter_images_download.writeNext(new String[]{p.getImages().getLow_resolution().getUrl(), p.getId()});
                     }
@@ -279,8 +306,8 @@ public class Teste {
                 String url = tagsRecents.getPagination().getNext_url();
 
                 if (url == null) {
-                    System.out.println(tagsRecents.getPagination().getNext_min_id());
-                    System.out.println(tagsRecents.getPagination().getNext_max_id());
+//                    System.out.println(tagsRecents.getPagination().getNext_min_id());
+//                    System.out.println(tagsRecents.getPagination().getNext_max_id());
 
                     url = "https://api.instagram.com/v1/tags/" + tag + "?access_token=644397518.1fb234f.b81ed940c95245d7995ef661f0618afe&min_id=" + tagsRecents.getPagination().getNext_min_id();
                     break;
@@ -302,13 +329,15 @@ public class Teste {
             }
             i++;
 
-            System.out.print(currentTimestamp + " ");
-            System.out.println(targetTimestamp);
-            System.out.println((1.0 * (currentTimestamp - targetTimestamp) / (60)));
+//            System.out.print(currentTimestamp + " ");
+//            System.out.println(targetTimestamp);
+//            System.out.println((1.0 * (currentTimestamp - targetTimestamp) / (60)));
+                
         } while (currentTimestamp - targetTimestamp <= 60 * minutosAnalise);
+//        } while ( targetTimestamp >= timefinal || (i*20)>media_count);
 
-        System.out.println(
-                "numero midias:" + i * 20 + "    ");
+
+       
 
         try {
             cSVWriter_data.flush();
@@ -321,19 +350,30 @@ public class Teste {
         }
 
         new MetodosAdicionais()
-                .download(mainDir + "images_download.csv", "", imagesDir,separatorCSV);
+                .download(directory + "images_download.csv", "", imagesDir, separator);
 
     }
-    
-    
-    public static Map<String, String> getParameters(String args[],HashSet<String> allparameters) {
-        
+
+    public static String setParameter(String key, String value, Map<String, String> parameters) {
+
+        if (parameters.containsKey(key)) {
+            System.out.print(key + ": ");
+            System.out.println(parameters.get(key));
+            return parameters.get(key);
+
+        } else {
+            return value;
+        }
+    }
+
+    public static Map<String, String> getParameters(String args[], HashSet<String> allparameters) {
+
         String key;
-        String value ;
+        String value;
         Map<String, String> parameters = new HashMap<>();
-        if (args.length<2){
+        if (args.length < 2) {
             key = args[0];
-            if (key.toLowerCase().contains("--help")||key.toLowerCase().contains("-h")){
+            if (key.toLowerCase().contains("--help") || key.toLowerCase().contains("-h")) {
                 help(allparameters);
                 System.exit(0);
             }
@@ -343,29 +383,28 @@ public class Teste {
             key = args[i];
             value = args[i + 1];
             i++;
-            
-            
+
             if (allparameters.contains(key) && (!allparameters.contains(value))) {
                 parameters.put(key, value);
             } else {
-                System.out.println("unknown option: \"" + key + " " + value+"\"");
+                System.out.println("unknown option: \"" + key + " " + value + "\"");
                 System.out.println("usage: ");
-                for(String parameter:allparameters)
+                for (String parameter : allparameters) {
                     System.out.print("[" + parameter + "] ");
-            
-            
+                }
+
                 System.exit(1);
             }
         }
 
         return parameters;
     }
-    
-    public static void help(HashSet<String> allparameters){
+
+    public static void help(HashSet<String> allparameters) {
         System.out.println("usage: ");
-                for(String parameter:allparameters)
-                    System.out.print("[" + parameter + "] ");
-            
-        
+        for (String parameter : allparameters) {
+            System.out.print("[" + parameter + "] ");
+        }
+
     }
 }
