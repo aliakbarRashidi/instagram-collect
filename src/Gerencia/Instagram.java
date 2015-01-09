@@ -41,8 +41,8 @@ public class Instagram {
      */
     public JSONObject getMedia_Count(String tag) {
         Media_count media_count = new Media_count();
-
-        String urlget = "https://api.instagram.com/v1/tags/" + tag + "?access_token=644397518.1fb234f.b81ed940c95245d7995ef661f0618afe";
+        
+        String urlget = "https://api.instagram.com/v1/tags/" + tag + "?access_token="+this.access_token;
 
         String receive = "";
 
@@ -69,7 +69,7 @@ public class Instagram {
     public String getTagsTagNameMediaRecent(String tag_search, String min_id, String max_id) {
 
         String url = "https://api.instagram.com/v1/tags/" + tag_search + "/media/recent?access_token=" + this.access_token + "&max_tag_id=" + max_id + "&min_tag_id=" + min_id;
-
+        
         String receive = "";
 
         try {
@@ -87,7 +87,7 @@ public class Instagram {
     public JSONObject getRecentTag(String tag, String min_id, String max_id) {
 
         String url = "https://api.instagram.com/v1/tags/" + tag + "/media/recent?access_token=" + this.access_token + "&max_tag_id=" + max_id + "&min_tag_id=" + min_id;
-
+        
         String receive = "";
 
         try {
@@ -98,7 +98,7 @@ public class Instagram {
             System.out.println("NÃO CARREGOU A PAGINA. VERIFIQUE A CONEXÃO COM A INTERNET");
             System.exit(0);
         }
-
+        
         JSONObject jsonRecentTag = new JSONObject(receive);
 
         return jsonRecentTag;
