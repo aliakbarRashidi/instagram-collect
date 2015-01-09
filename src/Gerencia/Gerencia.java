@@ -63,14 +63,12 @@ public class Gerencia {
         Meta meta = new Meta();
 
         meta.setCode(jsonMeta.getInt("code"));
+        meta.setError_message(jsonMeta.getString("error_message"));
+        meta.setError_type(jsonMeta.getString("error_type"));
         
         media_count.setMeta(meta);
         
-        System.out.println(media_count.getName());
-        System.out.println(media_count.getMedia_count());
-        
-        System.out.println(meta.getCode());
-
+    
     }
     
      public void pagination() {

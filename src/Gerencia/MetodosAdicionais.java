@@ -33,7 +33,7 @@ public class MetodosAdicionais {
 
     /**
      *
-     * @param url
+     * @param url_
      * @return
      * @throws IOException
      */
@@ -41,8 +41,8 @@ public class MetodosAdicionais {
 
         URL url = new URL(url_);
 
-        //  System.out.println(url.toString());
         String texto = "";
+
         try {
             if (conexao(url.toString())) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
@@ -60,7 +60,8 @@ public class MetodosAdicionais {
 
                 in.close();
             } else {
-                System.out.println("Invalido");
+                
+                System.out.println("acesse: \n" + url_);
             }
 
         } catch (Exception e) {
@@ -136,8 +137,6 @@ public class MetodosAdicionais {
         }
         //   in = url.openStream();
 
-        
-      
         if (in != null) {
             resposta = true;
             OutputStream out = new FileOutputStream(local);
@@ -186,24 +185,23 @@ public class MetodosAdicionais {
     }
 
     public void download(String caminho_origem, String last_link, String caminho_destino, char separator) throws IOException {
-        
-        
+
         Leitura leitura = new Leitura(caminho_origem);
         DecimalFormat df = new DecimalFormat();
         df.setMinimumFractionDigits(2);
-        
+
         int i = 0;
         int j;
         System.out.println("Iniciando Download.");
         int qnt = leitura.lista.size();
         for (j = 0; j < qnt; j++) {
-            
+
             String col1 = "";
             String col2 = String.valueOf(i);
 
             System.out.println("progresso: " + df.format(j * 100.0 / qnt) + "%");
             String tempLine = leitura.lista.get(i);
-           
+
             String tempLineVector[] = tempLine.split(String.valueOf(separator));
             col1 = tempLineVector[0].replace("\"", "");
             if (tempLineVector.length > 1) {
@@ -215,28 +213,27 @@ public class MetodosAdicionais {
             if (col1.contains(".")) {
                 formato = col1.split("\\.")[col1.split("\\.").length - 1];
             }
-            
+
 //            try {
 //                new Thread().sleep(0000);
 //            } catch (InterruptedException ex) {
 //                Logger.getLogger(MetodosAdicionais.class.getName()).log(Level.SEVERE, null, ex);
 //            }
-            
             String file = caminho_destino + col2 + "." + formato;
-           
-            if (!new File(file).exists()){
-            getImagem(file, col1);
+
+            if (!new File(file).exists()) {
+                getImagem(file, col1);
             }
             i++;
 
         }
-        
-        if (qnt==0){
+
+        if (qnt == 0) {
             qnt = 1;
             j = 1;
         }
         System.out.println("progresso: " + df.format(j * 100.0 / qnt) + "%");
-        System.out.println("foram baixados: "+j+".");
+        System.out.println("foram baixados: " + j + ".");
 
     }
 }
