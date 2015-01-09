@@ -47,7 +47,7 @@ public class Teste {
     public static void main(String[] args) throws IOException {
 
         //teste
-        args = new String[]{"--tag", "bolsonaro", "--minutos", "500000", "--directory", "teste", "--downloadimages", "sim", "--downloadvideos", "sim"};
+        args = new String[]{"--tag", "video", "--minutos", "5", "--directory", "teste", "--downloadimages", "sim", "--downloadvideos", "sim"};
 
         /*
          cria uma mapa des configurações para acesso (autenticação) do instagram, deve conter um arquivo configurations.txt com os nomes CLIENT_ID, CLIENT_SECRET E ACESS_TOKEN com seus respectivos valores separados por ponto e virgula.
@@ -182,20 +182,15 @@ public class Teste {
         int code = tagsRecents.getMeta().getCode();
         String error_type = tagsRecents.getMeta().getError_type();
         String error_message = tagsRecents.getMeta().getError_message();
-        System.out.println("error type:\t" +error_type);
-        System.out.println("error message:\t" +error_message);
+        System.out.println("error type:\t" + error_type);
+        System.out.println("error message:\t" + error_message);
 
         //dá um print da busca pesquisada.
         System.out.println("code:" + code);
         System.out.println("tag:\t" + tempMedia_count.getString("name"));
         int media_count = tempMedia_count.getInt("media_count");
         System.out.println("total media:    " + media_count);
-
-//        double horas = quantidadeBaixadas * (1.1 / 6000);
-//        double minutes = ((horas - (long) horas) * 60);
-//        double segundos = (minutes - (long) minutes) * 60;
-////        System.out.println(segundos);
-//    //    System.out.println("tempo aproximado de coleta: " + horas + " horas " +  minutos + " minutos e " + segundos + " segundos");
+ 
         //cria os CSVWriter  para criação dos CSVs
         CSVWriter cSVWriter_data = null;
         CSVWriter cSVWriter_links = null;
@@ -207,7 +202,7 @@ public class Teste {
             cSVWriter_data = new CSVWriter(new FileWriter(new File(directory + output)), delimiter, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER);
             cSVWriter_links = new CSVWriter(new FileWriter(new File(directory + "links.csv")), delimiter);
             cSVWriter_images_download = new CSVWriter(new FileWriter(new File(directory + "images_download.csv")), delimiter);
-            cSVWriter_images_download = new CSVWriter(new FileWriter(new File(directory + "videos_download.csv")), delimiter);
+            cSVWriter_videos_download = new CSVWriter(new FileWriter(new File(directory + "videos_download.csv")), delimiter);
             String[] fistLine = {"url", "user_username", "like", "link", "location_name", "location_id", "location_latitude", "location_longitude", "filter", "created_time", "user_profile_picture", "user_full_name", "user_id", "data_legivel"};
             cSVWriter_data.writeNext(fistLine);
 
@@ -230,126 +225,136 @@ public class Teste {
         caracteresMalucos.add(String.valueOf("\r"));
         caracteresMalucos.add(String.valueOf("\b"));
 
-        if(code!=429 || code!=200){
-            do {
-                cSVWriter_links.writeNext(new String[]{tagsRecents.getPagination().getNext_url()});
-                System.out.println("numero midias:" + i * 20 + "    ");
-                try {
-                    if (code == 429) {
-                        new MetodosAdicionais().download(directory + "images_download.csv", "", imagesDir, delimiter);
-                        System.err.println("error_message: The maximum number of requests per hour has been exceeded.");
-
-                        try {
-                            try {
-                                cSVWriter_data.flush();
-                                cSVWriter_data.close();
-                                cSVWriter_links.flush();
-                                cSVWriter_links.close();
-                                cSVWriter_images_download.flush();
-                                cSVWriter_images_download.close();
-
-                            } catch (IOException ex) {
-
-                            }
-                            long timeSleep = 10;
-                            System.out.println("tempo dormindo: " + timeSleep + " minutos.");
-                            new Thread().sleep(1000 * 60 * timeSleep);
-                        } catch (Exception e) {
-                        }
-                    }
-
-    //                System.out.println("progresso: " + (i * 100.0 / (sizeFor)) + "%");
-                    for (Photo p : tagsRecents.getData().getPhoto()) {
-                        String tempUser = p.getUser().getUsername().toLowerCase();
-
-                        if (usersblocks.contains(tempUser)) {
-                            continue;
-                        }
-
-                        String tempUserFullName = p.getUser().getFull_name().replaceAll("\"", "");
-
-                        targetTimestamp = Long.parseLong(p.getCreated_time());
-
-                        if (p.getComments().getCount() > 0) {
-                            long last_targetTimestamp = Long.parseLong(p.getComments().getData().get(0).getCreated_time());
-
-                            targetTimestamp = last_targetTimestamp;
-
-                        }
-
-                        //,"location_name","location_id","location_latitude","location_longitude","filter","created_time","user_profile_picture","user_full_name","user_id","data_legivel"}
-                        calendar.setTimeInMillis(targetTimestamp);
-
-                        Date date = new Date(targetTimestamp * 1000);
-                        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy - HH:mm:ss");
-
-                        //calendar.
-                        String dataLegivel = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "-" + String.valueOf(calendar.get(Calendar.MONTH) + 1) + "-" + String.valueOf(calendar.get(Calendar.YEAR)) + " - " + String.valueOf(calendar.get(Calendar.HOUR_OF_DAY)) + ":" + String.valueOf(calendar.get(Calendar.MINUTE)) + ":" + String.valueOf(calendar.get(Calendar.SECOND));
-                        dataLegivel = dateFormat.format(date);
-    //                    System.out.print(dataLegivel + " ");
-    //                    System.out.println(targetTimestamp);
-
-                        String[] tempLine = {p.getImages().getLow_resolution().getUrl(), p.getUser().getUsername(), String.valueOf(p.getLikes().getCount()), p.getLink(), p.getLocation().getName(), p.getLocation().getId(), p.getLocation().getLatitude(), p.getLocation().getLongitude(), p.getFilter(), p.getCreated_time(), p.getUser().getProfile_picture(), tempUserFullName, p.getUser().getId(), dataLegivel};
-
-                        if (p.getType().compareTo("image") == 0) {
-                            cSVWriter_images_download.writeNext(new String[]{p.getImages().getLow_resolution().getUrl(), p.getId()});
-                        }
-
-                        if (p.getComments().getData().size() > 0) {
-
-                            targetTimestamp = Long.parseLong(p.getComments().getData().get(0).getCreated_time());
-                        }
-
-                        cSVWriter_data.writeNext(tempLine);
-
-                    }
-                    cSVWriter_data.flush();
-                    cSVWriter_images_download.flush();
-                    cSVWriter_links.flush();
-                    String url = tagsRecents.getPagination().getNext_url();
-
-                    if (url == null) {
-                        url = "https://api.instagram.com/v1/tags/" + tag + "?access_token=" + ACESS_TOKEN + "&min_id=" + tagsRecents.getPagination().getNext_min_id();
-                        break;
-                    }
-
-                    JSONObject temptag = new JSONObject();
+        do {
+            cSVWriter_links.writeNext(new String[]{tagsRecents.getPagination().getNext_url()});
+            System.out.println("numero midias:" + i * 20 + "    ");
+            try {
+                if (code == 429) {
+                    new MetodosAdicionais().download(directory + "images_download.csv", "", imagesDir, delimiter);
+                    System.err.println("error_message: The maximum number of requests per hour has been exceeded.");
 
                     try {
-    //                    System.out.println(url);
-                        temptag = new JSONObject(new MetodosAdicionais().getPage(url));
-                    } catch (IOException ex) {
+                        try {
+                            cSVWriter_data.flush();
+                            cSVWriter_data.close();
+                            cSVWriter_links.flush();
+                            cSVWriter_links.close();
+                            cSVWriter_images_download.flush();
+                            cSVWriter_images_download.close();
+                            cSVWriter_videos_download.flush();
+                            cSVWriter_videos_download.close();
 
-                        System.err.println("erro");
+                        } catch (IOException ex) {
+
+                        }
+                        long timeSleep = 10;
+                        System.out.println("tempo dormindo: " + timeSleep + " minutos.");
+                        new Thread().sleep(1000 * 60 * timeSleep);
+                    } catch (Exception e) {
+                    }
+                }
+
+                //                System.out.println("progresso: " + (i * 100.0 / (sizeFor)) + "%");
+                for (Photo p : tagsRecents.getData().getPhoto()) {
+                    String tempUser = p.getUser().getUsername().toLowerCase();
+
+                    if (usersblocks.contains(tempUser)) {
+                        continue;
                     }
 
-                    tagsRecents = gerenciaGetTag.getTagsRecentsNEW(temptag);
+                    String tempUserFullName = p.getUser().getFull_name().replaceAll("\"", "");
 
-                } catch (Exception e) {
+                    targetTimestamp = Long.parseLong(p.getCreated_time());
+
+                    if (p.getComments().getCount() > 0) {
+                        long last_targetTimestamp = Long.parseLong(p.getComments().getData().get(0).getCreated_time());
+
+                        targetTimestamp = last_targetTimestamp;
+
+                    }
+
+                    //,"location_name","location_id","location_latitude","location_longitude","filter","created_time","user_profile_picture","user_full_name","user_id","data_legivel"}
+                    calendar.setTimeInMillis(targetTimestamp);
+
+                    Date date = new Date(targetTimestamp * 1000);
+                    DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy - HH:mm:ss");
+
+                    //calendar.
+                    String dataLegivel = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "-" + String.valueOf(calendar.get(Calendar.MONTH) + 1) + "-" + String.valueOf(calendar.get(Calendar.YEAR)) + " - " + String.valueOf(calendar.get(Calendar.HOUR_OF_DAY)) + ":" + String.valueOf(calendar.get(Calendar.MINUTE)) + ":" + String.valueOf(calendar.get(Calendar.SECOND));
+                    dataLegivel = dateFormat.format(date);
+    //                    System.out.print(dataLegivel + " ");
+                    //                    System.out.println(targetTimestamp);
+
+                    String[] tempLine = {p.getImages().getLow_resolution().getUrl(), p.getUser().getUsername(), String.valueOf(p.getLikes().getCount()), p.getLink(), p.getLocation().getName(), p.getLocation().getId(), p.getLocation().getLatitude(), p.getLocation().getLongitude(), p.getFilter(), p.getCreated_time(), p.getUser().getProfile_picture(), tempUserFullName, p.getUser().getId(), dataLegivel};
+
+                    if (p.getType().compareTo("image") == 0) {
+                        cSVWriter_images_download.writeNext(new String[]{p.getImages().getLow_resolution().getUrl(), p.getId()});
+                    }
+                    if (p.getType().compareTo("video") == 0) {
+                        cSVWriter_videos_download.writeNext(new String[]{p.getVideos().getLow_resolution().getUrl(), p.getId()});
+                    }
+
+                    if (p.getComments().getData().size() > 0) {
+
+                        targetTimestamp = Long.parseLong(p.getComments().getData().get(0).getCreated_time());
+                    }
+
+                    cSVWriter_data.writeNext(tempLine);
+
                 }
-                i++;
+                cSVWriter_data.flush();
+                cSVWriter_images_download.flush();
+                cSVWriter_videos_download.flush();
+                cSVWriter_links.flush();
+                String url = tagsRecents.getPagination().getNext_url();
+
+                if (url == null) {
+                    url = "https://api.instagram.com/v1/tags/" + tag + "?access_token=" + ACESS_TOKEN + "&min_id=" + tagsRecents.getPagination().getNext_min_id();
+                    break;
+                }
+
+                JSONObject temptag = new JSONObject();
+
+                try {
+                    //                    System.out.println(url);
+                    temptag = new JSONObject(new MetodosAdicionais().getPage(url));
+                } catch (IOException ex) {
+
+                    System.err.println("erro");
+                }
+
+                tagsRecents = gerenciaGetTag.getTagsRecentsNEW(temptag);
+
+            } catch (Exception e) {
+            }
+            i++;
 
     //            System.out.print(currentTimestamp + " ");
-    //            System.out.println(targetTimestamp);
-    //            System.out.println((1.0 * (currentTimestamp - targetTimestamp) / (60)));
-            } while (currentTimestamp - targetTimestamp <= 60 * minutosAnalise);
-    //        } while ( targetTimestamp >= timefinal || (i*20)>media_count);
+            //            System.out.println(targetTimestamp);
+            //            System.out.println((1.0 * (currentTimestamp - targetTimestamp) / (60)));
+        } while (currentTimestamp - targetTimestamp <= 60 * minutosAnalise);
+        //        } while ( targetTimestamp >= timefinal || (i*20)>media_count);
 
-            try {
-                cSVWriter_data.flush();
-                cSVWriter_data.close();
-                cSVWriter_images_download.close();
-                cSVWriter_links.close();
+        try {
+            cSVWriter_data.flush();
+            cSVWriter_data.close();
+            cSVWriter_images_download.close();
+            cSVWriter_videos_download.close();
+            cSVWriter_links.close();
 
-            } catch (IOException ex) {
+        } catch (IOException ex) {
 
-            }
-
-            if (downloadimages) {
-                new MetodosAdicionais()
-                        .download(directory + "images_download.csv", "", imagesDir, delimiter);
-            }
         }
+
+        if (downloadimages) {
+            new MetodosAdicionais()
+                    .download(directory + "images_download.csv", "", imagesDir, delimiter);
+        }
+        if (downloadvideos) {
+            new MetodosAdicionais()
+                    .download(directory + "videos_download.csv", "", videosDir, delimiter);
+        }
+
     }
 
     public static ArrayList<String> getUserBlocks(String path) {
