@@ -198,6 +198,7 @@ public class Teste {
         CSVWriter cSVWriter_links = null;
         CSVWriter cSVWriter_images_download = null;
         CSVWriter cSVWriter_videos_download = null;
+        CSVWriter cSVWriter_image_cloud = null;
 
         //inicializa os CsvWriter com os path, delimitadores ..
         try {
@@ -205,8 +206,12 @@ public class Teste {
             cSVWriter_links = new CSVWriter(new FileWriter(new File(directory + "links.csv")), delimiter);
             cSVWriter_images_download = new CSVWriter(new FileWriter(new File(directory + "images_download.csv")), delimiter);
             cSVWriter_videos_download = new CSVWriter(new FileWriter(new File(directory + "videos_download.csv")), delimiter);
+            cSVWriter_image_cloud = new CSVWriter(new FileWriter(new File(directory + "image_cloud.csv")), delimiter);
+            
+            String[] fistLine_image_cloud = {"imagem_name","like","time"};
             String[] fistLine = {"url", "user_username", "like", "link", "location_name", "location_id", "location_latitude", "location_longitude", "filter", "created_time", "user_profile_picture", "user_full_name", "user_id", "data_legivel"};
             cSVWriter_data.writeNext(fistLine);
+            cSVWriter_image_cloud.writeNext(fistLine_image_cloud);
 
         } catch (IOException iOException) {
             System.out.println("error 1: falha ao tentar criar os arquivos de escrita, verifique a sua permissão de usuário e/ou se a pasta existe.");
@@ -299,6 +304,7 @@ public class Teste {
 //
 //                                        System.out.println(p.getCaption().getCreated_time());
                     String[] tempLine = {p.getImages().getLow_resolution().getUrl(), p.getUser().getUsername(), String.valueOf(p.getLikes().getCount()), p.getLink(), p.getLocation().getName(), p.getLocation().getId(), p.getLocation().getLatitude(), p.getLocation().getLongitude(), p.getFilter(), p.getCreated_time(), p.getUser().getProfile_picture(), tempUserFullName, p.getUser().getId(), dataLegivel};
+                    String[] tempLine_image_cloud = {p.getId()+".jpg",String.valueOf(p.getLikes().getCount()),p.getCreated_time()};
 
                     if (p.getType().compareTo("image") == 0) {
                         cSVWriter_images_download.writeNext(new String[]{p.getImages().getLow_resolution().getUrl(), p.getId()});
@@ -310,6 +316,7 @@ public class Teste {
                     
 
                     cSVWriter_data.writeNext(tempLine);
+                    cSVWriter_data.writeNext(tempLine_image_cloud);
                    listtarget.add(targetTimestamp);
                 }
                
@@ -321,6 +328,8 @@ public class Teste {
                 cSVWriter_images_download.flush();
                 cSVWriter_videos_download.flush();
                 cSVWriter_links.flush();
+                cSVWriter_image_cloud.flush();
+                
                 String url = tagsRecents.getPagination().getNext_url();
 
                 if (url == null) {
@@ -359,6 +368,7 @@ public class Teste {
             cSVWriter_images_download.close();
             cSVWriter_videos_download.close();
             cSVWriter_links.close();
+            cSVWriter_image_cloud.close();
 
         } catch (IOException ex) {
 
