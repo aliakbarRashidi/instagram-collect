@@ -46,8 +46,9 @@ public class Teste {
      */
     public static void main(String[] args) throws IOException {
 
+        getWindows();
         //teste
-        args = new String[]{"--tag", "video", "--minutos", "5", "--directory", "teste", "--downloadimages", "sim", "--downloadvideos", "sim"};
+//        args = new String[]{"--tag", "jesuscharlie", "--time", "1410691218", "--directory", "teste", "--downloadimages", "sim", "--downloadvideos", "sim"};
 
         /*
          cria uma mapa des configurações para acesso (autenticação) do instagram, deve conter um arquivo configurations.txt com os nomes CLIENT_ID, CLIENT_SECRET E ACESS_TOKEN com seus respectivos valores separados por ponto e virgula.
@@ -99,7 +100,8 @@ public class Teste {
         int quantidadeBaixadas = 100;
         long currentTimestamp = System.currentTimeMillis() / 1000;
         long targetTimestamp = 0;
-        long timefinal = 0;
+        long targetTimestampMAIOR = 0;
+        long timefinal = currentTimestamp - 60 * 60;
         boolean downloadimages;
         boolean downloadvideos = false;
 
@@ -190,7 +192,7 @@ public class Teste {
         System.out.println("tag:\t" + tempMedia_count.getString("name"));
         int media_count = tempMedia_count.getInt("media_count");
         System.out.println("total media:    " + media_count);
- 
+
         //cria os CSVWriter  para criação dos CSVs
         CSVWriter cSVWriter_data = null;
         CSVWriter cSVWriter_links = null;
@@ -224,13 +226,18 @@ public class Teste {
         caracteresMalucos.add(String.valueOf("\t"));
         caracteresMalucos.add(String.valueOf("\r"));
         caracteresMalucos.add(String.valueOf("\b"));
-
+        
         do {
             cSVWriter_links.writeNext(new String[]{tagsRecents.getPagination().getNext_url()});
             System.out.println("numero midias:" + i * 20 + "    ");
             try {
                 if (code == 429) {
-                    new MetodosAdicionais().download(directory + "images_download.csv", "", imagesDir, delimiter);
+                    if (downloadimages) {
+                        new MetodosAdicionais().download(directory + "images_download.csv", "", imagesDir, delimiter);
+                    }
+                    if (downloadvideos) {
+                        new MetodosAdicionais().download(directory + "videos_download.csv", "", videosDir, delimiter);
+                    }
                     System.err.println("error_message: The maximum number of requests per hour has been exceeded.");
 
                     try {
@@ -253,8 +260,9 @@ public class Teste {
                     } catch (Exception e) {
                     }
                 }
-
+                targetTimestampMAIOR = 0;
                 //                System.out.println("progresso: " + (i * 100.0 / (sizeFor)) + "%");
+                ArrayList<Long> listtarget = new ArrayList<>();
                 for (Photo p : tagsRecents.getData().getPhoto()) {
                     String tempUser = p.getUser().getUsername().toLowerCase();
 
@@ -272,6 +280,10 @@ public class Teste {
                         targetTimestamp = last_targetTimestamp;
 
                     }
+                   
+                    
+                    
+                   
 
                     //,"location_name","location_id","location_latitude","location_longitude","filter","created_time","user_profile_picture","user_full_name","user_id","data_legivel"}
                     calendar.setTimeInMillis(targetTimestamp);
@@ -282,9 +294,10 @@ public class Teste {
                     //calendar.
                     String dataLegivel = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "-" + String.valueOf(calendar.get(Calendar.MONTH) + 1) + "-" + String.valueOf(calendar.get(Calendar.YEAR)) + " - " + String.valueOf(calendar.get(Calendar.HOUR_OF_DAY)) + ":" + String.valueOf(calendar.get(Calendar.MINUTE)) + ":" + String.valueOf(calendar.get(Calendar.SECOND));
                     dataLegivel = dateFormat.format(date);
-    //                    System.out.print(dataLegivel + " ");
-                    //                    System.out.println(targetTimestamp);
-
+//                                        System.out.print(dataLegivel + " ");
+//                                        System.out.print(targetTimestamp+" ");
+//
+//                                        System.out.println(p.getCaption().getCreated_time());
                     String[] tempLine = {p.getImages().getLow_resolution().getUrl(), p.getUser().getUsername(), String.valueOf(p.getLikes().getCount()), p.getLink(), p.getLocation().getName(), p.getLocation().getId(), p.getLocation().getLatitude(), p.getLocation().getLongitude(), p.getFilter(), p.getCreated_time(), p.getUser().getProfile_picture(), tempUserFullName, p.getUser().getId(), dataLegivel};
 
                     if (p.getType().compareTo("image") == 0) {
@@ -294,14 +307,16 @@ public class Teste {
                         cSVWriter_videos_download.writeNext(new String[]{p.getVideos().getLow_resolution().getUrl(), p.getId()});
                     }
 
-                    if (p.getComments().getData().size() > 0) {
-
-                        targetTimestamp = Long.parseLong(p.getComments().getData().get(0).getCreated_time());
-                    }
+                    
 
                     cSVWriter_data.writeNext(tempLine);
-
+                   listtarget.add(targetTimestamp);
                 }
+               
+                
+                targetTimestamp= getMaxValue(listtarget);
+                
+                
                 cSVWriter_data.flush();
                 cSVWriter_images_download.flush();
                 cSVWriter_videos_download.flush();
@@ -329,11 +344,14 @@ public class Teste {
             }
             i++;
 
-    //            System.out.print(currentTimestamp + " ");
-            //            System.out.println(targetTimestamp);
+            //            System.out.print(currentTimestamp + " ");
+            System.out.print(targetTimestamp + " ");
+            System.out.println(timefinal);
+            System.out.println(" "+ i*20);
             //            System.out.println((1.0 * (currentTimestamp - targetTimestamp) / (60)));
-        } while (currentTimestamp - targetTimestamp <= 60 * minutosAnalise);
-        //        } while ( targetTimestamp >= timefinal || (i*20)>media_count);
+//        } while (currentTimestamp - targetTimestamp <= 60 * minutosAnalise);
+//        } while (targetTimestamp >= timefinal || (i * 20) > media_count);
+        } while (targetTimestamp >= timefinal);
 
         try {
             cSVWriter_data.flush();
@@ -357,6 +375,33 @@ public class Teste {
 
     }
 
+    
+    
+    
+    
+    public static long getMaxValue(ArrayList<Long> listTarget){
+        long maior = 0;
+        for(Long tempTarget:listTarget){
+            if(tempTarget>maior){
+                System.out.println(tempTarget);
+                maior = tempTarget;
+            }
+        }
+        return maior;
+    }
+    
+    
+    
+    
+    
+    public static void getWindows() {
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new JanelaPrincipal().setVisible(true);
+            }
+        });
+    }
+
     public static ArrayList<String> getUserBlocks(String path) {
         ArrayList<String> userblocks = new ArrayList<>();
         System.out.println("Usuários Banidos:   ");
@@ -372,7 +417,8 @@ public class Teste {
                 System.out.println("\t" + linha);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+
+            System.out.println("não foi possível ler a lista de usuarios banidos");
         }
 
         return userblocks;

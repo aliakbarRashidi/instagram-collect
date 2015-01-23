@@ -143,7 +143,14 @@ public class MetodosAdicionais {
             byte[] buf = new byte[100000];
             int n = 0;
             int qnt = 0;
-
+            long timeSleep = 3;
+                        System.out.println("tempo dormindo: " + timeSleep + " segundos.");
+            try {
+                Thread.sleep(1000 * timeSleep);
+            } catch (InterruptedException ex) {
+                System.out.println("error ao dormir no download");
+            }
+                        
             System.out.print(" tamanho: " + urrl.getContentLengthLong() / 1000.0 + "kb [");
             do {
                 n = in.read(buf);
