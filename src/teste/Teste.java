@@ -316,7 +316,7 @@ public class Teste {
                     
 
                     cSVWriter_data.writeNext(tempLine);
-                    cSVWriter_data.writeNext(tempLine_image_cloud);
+                    cSVWriter_image_cloud.writeNext(tempLine_image_cloud);
                    listtarget.add(targetTimestamp);
                 }
                
