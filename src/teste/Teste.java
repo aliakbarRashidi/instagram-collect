@@ -46,9 +46,9 @@ public class Teste {
      */
     public static void main(String[] args) throws IOException {
 
-        getWindows();
+//        getWindows();
         //teste
-//        args = new String[]{"--tag", "jesuscharlie", "--time", "1410691218", "--directory", "teste", "--downloadimages", "sim", "--downloadvideos", "sim"};
+        args = new String[]{"--tag", "jesuscharlie", "--time", "1410691218", "--directory", "teste", "--downloadimages", "n", "--downloadvideos", "n"};
 
         /*
          cria uma mapa des configurações para acesso (autenticação) do instagram, deve conter um arquivo configurations.txt com os nomes CLIENT_ID, CLIENT_SECRET E ACESS_TOKEN com seus respectivos valores separados por ponto e virgula.

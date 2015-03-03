@@ -155,7 +155,7 @@
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel4">
       <Properties>
-        <Property name="text" type="java.lang.String" value="MInutos para tr&#xe1;s"/>
+        <Property name="text" type="java.lang.String" value="Timestamp"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel5">

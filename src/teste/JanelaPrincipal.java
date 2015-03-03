@@ -53,7 +53,7 @@ public class JanelaPrincipal extends javax.swing.JFrame {
 
         jLabel3.setText("Hashtag");
 
-        jLabel4.setText("MInutos para trás");
+        jLabel4.setText("Timestamp");
 
         jLabel5.setText("Diretório para salvar");
 
