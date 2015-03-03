@@ -48,18 +48,9 @@ public class Teste {
 
 //        getWindows();
         //teste
-        args = new String[]{"--tag", "jesuscharlie", "--time", "1410691218", "--directory", "teste", "--downloadimages", "n", "--downloadvideos", "n"};
+        args = new String[]{"--tag", "vasco", "--time", "1425254400", "--directory", "teste", "--downloadimages", "n", "--downloadvideos", "n"};
 
-        /*
-         cria uma mapa des configurações para acesso (autenticação) do instagram, deve conter um arquivo configurations.txt com os nomes CLIENT_ID, CLIENT_SECRET E ACESS_TOKEN com seus respectivos valores separados por ponto e virgula.
-         */
-        configurations = getConfigurations("configurations.txt");
-
-        //faz a leitura de cada valor de autenticação.
-        CLIENT_ID = configurations.get("CLIENT_ID");
-        CLIENT_SECRET = configurations.get("CLIENT_SECRET");
-        ACESS_TOKEN = configurations.get("ACESS_TOKEN");
-
+       
         //define os parametros que serão passados para ser chamado no programa. 
         //nessa primeira versão os valores são adicionados manualmentes. em breve serão lidos de um txt que servirá também de ajuda para entendimento desses parametros.
         HashSet<String> allparameters = new HashSet<>();
@@ -77,6 +68,8 @@ public class Teste {
         allparameters.add("-d");
         allparameters.add("--time");
         allparameters.add("-T");
+        allparameters.add("--configurations");
+        allparameters.add("-c");
 
         allparameters.add("--downloadimages");
         allparameters.add("-i");
@@ -90,11 +83,12 @@ public class Teste {
         Map<String, String> parameters = getParameters(args, allparameters);
 
         //define os valores de inicialização padrão, para caso faltem alguns parametros de entrada.
+        String configs = "configurations.txt";
         String tag = "labic";
         String minutos = "60";
         String usersblockpath = "userblock.txt";
         Calendar calendar = Calendar.getInstance();
-        String output = String.valueOf(calendar.get(Calendar.YEAR)) + "-" + String.valueOf(calendar.get(Calendar.MONTH)) + "-" + String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "_" + calendar.get(Calendar.HOUR_OF_DAY) + "h" + calendar.get(Calendar.MINUTE) + "m" + calendar.get(Calendar.SECOND) + "s.csv";
+        String output = String.valueOf(calendar.get(Calendar.YEAR)) + "-" + String.valueOf(calendar.get(Calendar.MONTH)) + "-" + String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "_" + calendar.get(Calendar.HOUR_OF_DAY) + "h" + calendar.get(Calendar.MINUTE) + "m" + calendar.get(Calendar.SECOND) ;
         String directory = "";
         char delimiter = ',';
         int quantidadeBaixadas = 100;
@@ -105,7 +99,13 @@ public class Teste {
         boolean downloadimages;
         boolean downloadvideos = false;
 
+      
+        
         //faz a leitura dos parametros.        
+        configs = setParameter("--configurations", configs, parameters);
+        configs = setParameter("--c", configs, parameters);
+        
+                
         tag = setParameter("--tag", tag, parameters);
         tag = setParameter("-t", tag, parameters);
 
@@ -141,6 +141,18 @@ public class Teste {
         output = tag + "_" + output;
 
         int minutosAnalise = Integer.parseInt(minutos);
+        
+        
+           /*
+         cria uma mapa des configurações para acesso (autenticação) do instagram, deve conter um arquivo configurations.txt com os nomes CLIENT_ID, CLIENT_SECRET E ACESS_TOKEN com seus respectivos valores separados por ponto e virgula.
+         */
+        configurations = getConfigurations(configs);
+
+        //faz a leitura de cada valor de autenticação.
+        CLIENT_ID = configurations.get("CLIENT_ID");
+        CLIENT_SECRET = configurations.get("CLIENT_SECRET");
+        ACESS_TOKEN = configurations.get("ACESS_TOKEN");
+
 
         //cria um novo objeto instagram com as autenticações
         Instagram instagram = new Instagram(CLIENT_ID, CLIENT_SECRET, ACESS_TOKEN);
@@ -202,14 +214,14 @@ public class Teste {
 
         //inicializa os CsvWriter com os path, delimitadores ..
         try {
-            cSVWriter_data = new CSVWriter(new FileWriter(new File(directory + output)), delimiter, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER);
-            cSVWriter_links = new CSVWriter(new FileWriter(new File(directory + "links.csv")), delimiter);
-            cSVWriter_images_download = new CSVWriter(new FileWriter(new File(directory + "images_download.csv")), delimiter);
-            cSVWriter_videos_download = new CSVWriter(new FileWriter(new File(directory + "videos_download.csv")), delimiter);
-            cSVWriter_image_cloud = new CSVWriter(new FileWriter(new File(directory + "image_cloud.csv")), delimiter);
+            cSVWriter_data = new CSVWriter(new FileWriter(new File(directory + output+".csv")), delimiter, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER);
+            cSVWriter_links = new CSVWriter(new FileWriter(new File(directory +output +"_links.csv")), delimiter);
+            cSVWriter_images_download = new CSVWriter(new FileWriter(new File(directory + output +"_images_download.csv")), delimiter);
+            cSVWriter_videos_download = new CSVWriter(new FileWriter(new File(directory + output +"_videos_download.csv")), delimiter);
+            cSVWriter_image_cloud = new CSVWriter(new FileWriter(new File(directory + output +"_image_cloud.csv")), delimiter);
             
             String[] fistLine_image_cloud = {"imagem_name","like","time"};
-            String[] fistLine = {"url", "user_username", "like", "link", "location_name", "location_id", "location_latitude", "location_longitude", "filter", "created_time", "user_profile_picture", "user_full_name", "user_id", "data_legivel"};
+            String[] fistLine = {"url", "user_username", "like", "link", "location_name", "location_id", "location_latitude", "location_longitude", "filter", "created_time", "user_profile_picture", "user_full_name", "user_id", "data_legivel","caption","comments"};
             cSVWriter_data.writeNext(fistLine);
             cSVWriter_image_cloud.writeNext(fistLine_image_cloud);
 
@@ -238,10 +250,10 @@ public class Teste {
             try {
                 if (code == 429) {
                     if (downloadimages) {
-                        new MetodosAdicionais().download(directory + "images_download.csv", "", imagesDir, delimiter);
+                        new MetodosAdicionais().download(directory +output +"_images_download.csv", "", imagesDir, delimiter);
                     }
                     if (downloadvideos) {
-                        new MetodosAdicionais().download(directory + "videos_download.csv", "", videosDir, delimiter);
+                        new MetodosAdicionais().download(directory +output +"_videos_download.csv", "", videosDir, delimiter);
                     }
                     System.err.println("error_message: The maximum number of requests per hour has been exceeded.");
 
@@ -303,7 +315,14 @@ public class Teste {
 //                                        System.out.print(targetTimestamp+" ");
 //
 //                                        System.out.println(p.getCaption().getCreated_time());
-                    String[] tempLine = {p.getImages().getLow_resolution().getUrl(), p.getUser().getUsername(), String.valueOf(p.getLikes().getCount()), p.getLink(), p.getLocation().getName(), p.getLocation().getId(), p.getLocation().getLatitude(), p.getLocation().getLongitude(), p.getFilter(), p.getCreated_time(), p.getUser().getProfile_picture(), tempUserFullName, p.getUser().getId(), dataLegivel};
+                    String comments = "";
+                    for (int indexComments = 0 ; indexComments<p.getComments().getCount();indexComments++){
+                        
+                            comments = comments+"["+p.getComments().getData().get(indexComments).getText()+"]";
+                       
+                    }
+                    
+                    String[] tempLine = {p.getImages().getLow_resolution().getUrl(), p.getUser().getUsername(), String.valueOf(p.getLikes().getCount()), p.getLink(), p.getLocation().getName(), p.getLocation().getId(), p.getLocation().getLatitude(), p.getLocation().getLongitude(), p.getFilter(), p.getCreated_time(), p.getUser().getProfile_picture(), tempUserFullName, p.getUser().getId(), dataLegivel,p.getCaption().getText(),comments};
                     String[] tempLine_image_cloud = {p.getId()+".jpg",String.valueOf(p.getLikes().getCount()),p.getCreated_time()};
 
                     if (p.getType().compareTo("image") == 0) {
@@ -376,11 +395,11 @@ public class Teste {
 
         if (downloadimages) {
             new MetodosAdicionais()
-                    .download(directory + "images_download.csv", "", imagesDir, delimiter);
+                    .download(directory +output +"_images_download.csv", "", imagesDir, delimiter);
         }
         if (downloadvideos) {
             new MetodosAdicionais()
-                    .download(directory + "videos_download.csv", "", videosDir, delimiter);
+                    .download(directory + output +"_videos_download.csv", "", videosDir, delimiter);
         }
 
     }
