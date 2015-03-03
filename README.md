@@ -9,20 +9,35 @@ como usar:
 		
 os comandos são:
 
---tag [hashtag a ser buscada] [exemplo: --tag labic]
+--tag 
+	hashtag a ser buscada
+	- exemplo: --tag labic
 
---time [o tempo final de pesquisa no formato timestamp] [exemplo: --time 1410691218]
+--time 
+	o tempo final de pesquisa no formato timestamp
+	- exemplo: --time 1410691218
 
---director [diretório de saídas dos arquivos] [exemplo: --directory "C:\\home\\labic\\downloads"]
+--director
+	diretório de saídas dos arquivos
+	- exemplo: --directory "C:\\home\\labic\\downloads"
 
---downloadimages [habilita a opção de baixar as imagens, o padrão é yes] [exemplo: --downloadimages yes ]
+--downloadimages 
+	habilita a opção de baixar as imagens, o padrão é yes 
+	- exemplo: --downloadimages yes 
 
---downloadvideos [habilita a opção de baixar os videos, o padrão é yes] [exemplo: --downloadvideos no ]
+--downloadvideos 
+	habilita a opção de baixar os videos, o padrão é yes
+	- exemplo: --downloadvideos no 
 
---delimiter [delimitador de texto para saida do arquivo, o padrão é ,] [exemplo: --delimiter ,]
+--delimiter 
+	delimitador de texto para saida do arquivo, o padrão é ,
+	- exemplo: --delimiter ,
 
 
 exemplo de pesquisa:
+```sh
 java -jar Leticia.jar --tag labic  --time 1410691218  --directory "/home/labic/downloads" --downloadimages yes --downloadvideos yes  --delimiter ,
+```
+
 
 o program está sendo desenvolvido.
