@@ -4,6 +4,7 @@ como usar:
 - faça o download do aplicativo (https://github.com/andreibastos/leticia/archive/master.zip)
 - extraia
 - entre na pasta dist
+- altere o arquivo configurations.txt com sua "CLIENT_ID" "CLIENT_SECRET" e  "ACESS_TOKEN"
 - dentro da pasta dist entre em um terminal (no Windows,segure shift+botão direito abrir terminal aqui, no linux, abra o terminal e caminha até a pasta ex. cd /leticia-master/dist/)
 - com o terminal aberto, digite: java -jar Leticia.jar comandos	
 		
