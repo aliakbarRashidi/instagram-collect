@@ -6,7 +6,8 @@ como usar:
 		entre na pasta dist
 		dentro da pasta dist entre em um terminal (no Windows,segure shift+botão direito abrir terminal aqui, no linux, abra o terminal e caminha até a pasta ex. cd /leticia-master/dist/)
 		com o terminal aberto, digite: java -jar Leticia.jar <comandos>	
-os <comandos> são
+		
+os comandos são:
 
 --tag [hashtag a ser buscada] [exemplo: --tag labic]
 --time [o tempo final de pesquisa no formato timestamp] [exemplo: --time 1410691218]
