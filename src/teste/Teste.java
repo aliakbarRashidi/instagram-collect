@@ -13,7 +13,7 @@ import Data.Photo;
 import Gerencia.GerenciaGetTag;
 import Gerencia.Instagram;
 import Gerencia.MetodosAdicionais;
-import Gerencia.TagsRecents;
+import Gerencia.Recents;
 import au.com.bytecode.opencsv.CSVWriter;
 import java.io.BufferedReader;
 import java.io.File;
@@ -48,14 +48,21 @@ public class Teste {
 
 //        getWindows();
         //teste
-        args = new String[]{"--tag", "vasco", "--time", "1425254400", "--directory", "teste", "--downloadimages", "n", "--downloadvideos", "n"};
+//        args = new String[]{"--tag", "aftersexy","-f", "images_download.csv"};
+//        args = new String[]{"--tag", "aftersexy", "--time", "1425879200", "--directory", "Pesquisa", "--downloadimages", "n", "--downloadvideos", "n"};
+//        args = new String[]{"--locationID", "1671488","--service", "locations", "--time", "1425254400", "--directory", "teste", "--downloadimages", "n", "--downloadvideos", "n"};
 
-       
+        String printAll = "";
+
         //define os parametros que serão passados para ser chamado no programa. 
         //nessa primeira versão os valores são adicionados manualmentes. em breve serão lidos de um txt que servirá também de ajuda para entendimento desses parametros.
         HashSet<String> allparameters = new HashSet<>();
         allparameters.add("--tag");
         allparameters.add("-t");
+        allparameters.add("--locationID");
+        allparameters.add("-L");
+        allparameters.add("--service");
+        allparameters.add("-s");
         allparameters.add("--minutos");
         allparameters.add("-m");
         allparameters.add("--userblock");
@@ -76,6 +83,10 @@ public class Teste {
         allparameters.add("--downloadvideos");
         allparameters.add("-v");
 
+        allparameters.add("--downloadfile");
+        allparameters.add("-f");
+
+
         /*essa linha monta um mapa com os parametros e argumentos de entrada da função.
          exemplo:             
          args = new String[]{"--tag", "bolsonaro", "--minutos", "500000", "--directory", "teste","-i","sim","-v","não"};
@@ -84,12 +95,13 @@ public class Teste {
 
         //define os valores de inicialização padrão, para caso faltem alguns parametros de entrada.
         String configs = "configurations.txt";
-        String tag = "labic";
+        String search = "labic";
+        String locationID = "1671488";
         String minutos = "60";
         String usersblockpath = "userblock.txt";
         Calendar calendar = Calendar.getInstance();
-        String output = String.valueOf(calendar.get(Calendar.YEAR)) + "-" + String.valueOf(calendar.get(Calendar.MONTH)) + "-" + String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "_" + calendar.get(Calendar.HOUR_OF_DAY) + "h" + calendar.get(Calendar.MINUTE) + "m" + calendar.get(Calendar.SECOND) ;
-        String directory = "";
+        String output = String.valueOf(calendar.get(Calendar.YEAR)) + "-" + String.valueOf(calendar.get(Calendar.MONTH)) + "-" + String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "_" + calendar.get(Calendar.HOUR_OF_DAY) + "h" + calendar.get(Calendar.MINUTE) + "m" + calendar.get(Calendar.SECOND);
+        String directory = "Pesquisa";
         char delimiter = ',';
         int quantidadeBaixadas = 100;
         long currentTimestamp = System.currentTimeMillis() / 1000;
@@ -98,16 +110,28 @@ public class Teste {
         long timefinal = currentTimestamp - 60 * 60;
         boolean downloadimages;
         boolean downloadvideos = false;
+        String service = "tags";
+        String downloadfile = "";
 
-      
-        
         //faz a leitura dos parametros.        
+        downloadfile = setParameter("--downloadfile", configs, parameters);
+        downloadfile = setParameter("-f", configs, parameters);
+
         configs = setParameter("--configurations", configs, parameters);
-        configs = setParameter("--c", configs, parameters);
-        
-                
-        tag = setParameter("--tag", tag, parameters);
-        tag = setParameter("-t", tag, parameters);
+        configs = setParameter("-c", configs, parameters);
+
+        service = setParameter("--service", service, parameters);
+        service = setParameter("-s", service, parameters);
+
+        if (service.equalsIgnoreCase("tags")) {
+            search = setParameter("--tag", search, parameters);
+            search = setParameter("-t", search, parameters);
+        }
+
+        if (service.equalsIgnoreCase("locations")) {
+            search = setParameter("--locationID", search, parameters);
+            search = setParameter("-L", search, parameters);
+        }
 
         minutos = setParameter("--minutos", minutos, parameters);
         minutos = setParameter("-m", minutos, parameters);
@@ -138,12 +162,15 @@ public class Teste {
         downloadimages = setParameter("-i", "sim", parameters).toLowerCase().startsWith("s");
         downloadvideos = setParameter("-v", "sim", parameters).toLowerCase().startsWith("s");
 
-        output = tag + "_" + output;
+        output = search + "_" + output;
+
+        System.out.println("download file: " + downloadfile);
+
+        
 
         int minutosAnalise = Integer.parseInt(minutos);
-        
-        
-           /*
+
+        /*
          cria uma mapa des configurações para acesso (autenticação) do instagram, deve conter um arquivo configurations.txt com os nomes CLIENT_ID, CLIENT_SECRET E ACESS_TOKEN com seus respectivos valores separados por ponto e virgula.
          */
         configurations = getConfigurations(configs);
@@ -153,19 +180,32 @@ public class Teste {
         CLIENT_SECRET = configurations.get("CLIENT_SECRET");
         ACESS_TOKEN = configurations.get("ACESS_TOKEN");
 
-
         //cria um novo objeto instagram com as autenticações
         Instagram instagram = new Instagram(CLIENT_ID, CLIENT_SECRET, ACESS_TOKEN);
 
         GerenciaGetTag gerenciaGetTag = new GerenciaGetTag();
 
         //cria as pastas para armazenamento do csv, download das imagens e dos videos.
-        String imagesDir = directory + "images" + fileSeparator;
-        String videosDir = directory + "videos" + fileSeparator;
+        String searchDir = directory + search + fileSeparator;
+
+        String imagesDir = searchDir + "images" + fileSeparator;
+        String videosDir = searchDir + "videos" + fileSeparator;
+        String csvDir = searchDir + "CSV de " + getDataLegivel(currentTimestamp, calendar, "dd-MM-yyyy - HH-mm-ss") + fileSeparator;
 
         File pasta = new File(directory);
         if (!pasta.exists()) {
             new File(directory).mkdir();
+            pasta.mkdir();
+        }
+        directory = searchDir;
+        pasta = new File(searchDir);
+        if (!pasta.exists()) {
+            new File(imagesDir).mkdir();
+            pasta.mkdir();
+        }
+        pasta = new File(csvDir);
+        if (!pasta.exists()) {
+            new File(imagesDir).mkdir();
             pasta.mkdir();
         }
         pasta = new File(imagesDir);
@@ -179,18 +219,40 @@ public class Teste {
             pasta.mkdir();
         }
 
+        
         //dá um print na tela com os respectivos diretórios.
         System.out.println("mainDir:    " + directory);
         System.out.println("imagesDir:  " + imagesDir);
         System.out.println("videosDir:  " + videosDir);
+        System.out.println("csvDir:  " + csvDir);
 
+        String principalCsv = csvDir + "principal.csv";
+        String linksCsv = csvDir + "links.csv";
+        String imagesCsv = csvDir + "images_download.csv";
+        String videosCsv = csvDir + "videos_download.csv";
+        String imageCloudCsv = csvDir + "image_cloud.csv";
+
+        
+        if (downloadfile.contains(".csv")) {
+            if (downloadfile.contains("videos")) {    
+                     new MetodosAdicionais()
+                    .download(downloadfile, "", videosDir, delimiter, "videos");
+            }
+            if (downloadfile.contains("images")) {
+                new MetodosAdicionais()
+                        .download(downloadfile, "", imagesDir, delimiter, "imagens");
+            }    
+            
+            System.exit(5);
+        }
+        
         //cria os JSONOBJECTS para extrair as informações
-        JSONObject tagRecent = instagram.getRecentTag(tag, "", "");
-        JSONObject Media_count = instagram.getMedia_Count(tag);
+        JSONObject tagRecent = instagram.getRecentTag(search, "", "", service);
+        JSONObject Media_count = instagram.getMedia_Count(search, service);
         JSONObject tempMedia_count = Media_count.getJSONObject("data");
 
         //cria um objeto de tagrecents para controle das midias que estão vindo.
-        TagsRecents tagsRecents = gerenciaGetTag.getTagsRecentsNEW(tagRecent);
+        Recents tagsRecents = gerenciaGetTag.getTagsRecentsNEW(tagRecent);
 
         //código de error.    
         int code = tagsRecents.getMeta().getCode();
@@ -200,9 +262,12 @@ public class Teste {
         System.out.println("error message:\t" + error_message);
 
         //dá um print da busca pesquisada.
-        System.out.println("code:" + code);
+        System.out.println("code:\t" + code);
         System.out.println("tag:\t" + tempMedia_count.getString("name"));
-        int media_count = tempMedia_count.getInt("media_count");
+        int media_count = 0;
+        if (tempMedia_count.has("media_count")) {
+            media_count = tempMedia_count.getInt("media_count");
+        }
         System.out.println("total media:    " + media_count);
 
         //cria os CSVWriter  para criação dos CSVs
@@ -214,14 +279,15 @@ public class Teste {
 
         //inicializa os CsvWriter com os path, delimitadores ..
         try {
-            cSVWriter_data = new CSVWriter(new FileWriter(new File(directory + output+".csv")), delimiter, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER);
-            cSVWriter_links = new CSVWriter(new FileWriter(new File(directory +output +"_links.csv")), delimiter);
-            cSVWriter_images_download = new CSVWriter(new FileWriter(new File(directory + output +"_images_download.csv")), delimiter);
-            cSVWriter_videos_download = new CSVWriter(new FileWriter(new File(directory + output +"_videos_download.csv")), delimiter);
-            cSVWriter_image_cloud = new CSVWriter(new FileWriter(new File(directory + output +"_image_cloud.csv")), delimiter);
-            
-            String[] fistLine_image_cloud = {"imagem_name","like","time"};
-            String[] fistLine = {"url", "user_username", "like", "link", "location_name", "location_id", "location_latitude", "location_longitude", "filter", "created_time", "user_profile_picture", "user_full_name", "user_id", "data_legivel","caption","comments"};
+
+            cSVWriter_data = new CSVWriter(new FileWriter(new File(principalCsv)), delimiter, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER);
+            cSVWriter_links = new CSVWriter(new FileWriter(new File(linksCsv)), delimiter);
+            cSVWriter_images_download = new CSVWriter(new FileWriter(new File(imagesCsv)), delimiter);
+            cSVWriter_videos_download = new CSVWriter(new FileWriter(new File(videosCsv)), delimiter);
+            cSVWriter_image_cloud = new CSVWriter(new FileWriter(new File(imageCloudCsv)), delimiter);
+
+            String[] fistLine_image_cloud = {"imagem_name", "like", "time"};
+            String[] fistLine = {"url", "user_username", "like", "link", "location_name", "location_id", "location_latitude", "location_longitude", "filter", "created_time", "user_profile_picture", "user_full_name", "user_id", "data_legivel", "caption", "comments"};
             cSVWriter_data.writeNext(fistLine);
             cSVWriter_image_cloud.writeNext(fistLine_image_cloud);
 
@@ -243,17 +309,17 @@ public class Teste {
         caracteresMalucos.add(String.valueOf("\t"));
         caracteresMalucos.add(String.valueOf("\r"));
         caracteresMalucos.add(String.valueOf("\b"));
-        
+
         do {
             cSVWriter_links.writeNext(new String[]{tagsRecents.getPagination().getNext_url()});
-            System.out.println("numero midias:" + i * 20 + "    ");
+            System.out.println("numero midias:" + i * 20);
             try {
                 if (code == 429) {
                     if (downloadimages) {
-                        new MetodosAdicionais().download(directory +output +"_images_download.csv", "", imagesDir, delimiter);
+                        new MetodosAdicionais().download(directory + output + "_images_download.csv", "", imagesDir, delimiter, "imagens");
                     }
                     if (downloadvideos) {
-                        new MetodosAdicionais().download(directory +output +"_videos_download.csv", "", videosDir, delimiter);
+                        new MetodosAdicionais().download(directory + output + "_videos_download.csv", "", videosDir, delimiter, "imagens");
                     }
                     System.err.println("error_message: The maximum number of requests per hour has been exceeded.");
 
@@ -279,7 +345,8 @@ public class Teste {
                 }
                 targetTimestampMAIOR = 0;
                 //                System.out.println("progresso: " + (i * 100.0 / (sizeFor)) + "%");
-                ArrayList<Long> listtarget = new ArrayList<>();
+                ArrayList<Long> listTarget = new ArrayList<>();
+
                 for (Photo p : tagsRecents.getData().getPhoto()) {
                     String tempUser = p.getUser().getUsername().toLowerCase();
 
@@ -297,33 +364,19 @@ public class Teste {
                         targetTimestamp = last_targetTimestamp;
 
                     }
-                   
-                    
-                    
-                   
 
-                    //,"location_name","location_id","location_latitude","location_longitude","filter","created_time","user_profile_picture","user_full_name","user_id","data_legivel"}
-                    calendar.setTimeInMillis(targetTimestamp);
+                    String dataLegivel = getDataLegivel(targetTimestamp, calendar, "dd-MM-yyyy - HH:mm:ss");
 
-                    Date date = new Date(targetTimestamp * 1000);
-                    DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy - HH:mm:ss");
-
-                    //calendar.
-                    String dataLegivel = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "-" + String.valueOf(calendar.get(Calendar.MONTH) + 1) + "-" + String.valueOf(calendar.get(Calendar.YEAR)) + " - " + String.valueOf(calendar.get(Calendar.HOUR_OF_DAY)) + ":" + String.valueOf(calendar.get(Calendar.MINUTE)) + ":" + String.valueOf(calendar.get(Calendar.SECOND));
-                    dataLegivel = dateFormat.format(date);
-//                                        System.out.print(dataLegivel + " ");
-//                                        System.out.print(targetTimestamp+" ");
-//
-//                                        System.out.println(p.getCaption().getCreated_time());
                     String comments = "";
-                    for (int indexComments = 0 ; indexComments<p.getComments().getCount();indexComments++){
-                        
-                            comments = comments+"["+p.getComments().getData().get(indexComments).getText()+"]";
-                       
+                    for (int indexComments = 0; indexComments < p.getComments().getData().size(); indexComments++) {
+
+                        comments = comments + "[" + p.getComments().getData().get(indexComments).getText().replaceAll("\n", "") + "]";
+
                     }
-                    
-                    String[] tempLine = {p.getImages().getLow_resolution().getUrl(), p.getUser().getUsername(), String.valueOf(p.getLikes().getCount()), p.getLink(), p.getLocation().getName(), p.getLocation().getId(), p.getLocation().getLatitude(), p.getLocation().getLongitude(), p.getFilter(), p.getCreated_time(), p.getUser().getProfile_picture(), tempUserFullName, p.getUser().getId(), dataLegivel,p.getCaption().getText(),comments};
-                    String[] tempLine_image_cloud = {p.getId()+".jpg",String.valueOf(p.getLikes().getCount()),p.getCreated_time()};
+
+                    String[] tempLine = {p.getImages().getLow_resolution().getUrl(), p.getUser().getUsername(), String.valueOf(p.getLikes().getCount()), p.getLink(), p.getLocation().getName(), p.getLocation().getId(), p.getLocation().getLatitude(), p.getLocation().getLongitude(), p.getFilter(), p.getCreated_time(), p.getUser().getProfile_picture(), tempUserFullName, p.getUser().getId(), dataLegivel, p.getCaption().getText(), comments};
+
+                    String[] tempLine_image_cloud = {p.getId() + ".jpg", String.valueOf(p.getLikes().getCount()), p.getCreated_time()};
 
                     if (p.getType().compareTo("image") == 0) {
                         cSVWriter_images_download.writeNext(new String[]{p.getImages().getLow_resolution().getUrl(), p.getId()});
@@ -332,27 +385,25 @@ public class Teste {
                         cSVWriter_videos_download.writeNext(new String[]{p.getVideos().getLow_resolution().getUrl(), p.getId()});
                     }
 
-                    
-
                     cSVWriter_data.writeNext(tempLine);
                     cSVWriter_image_cloud.writeNext(tempLine_image_cloud);
-                   listtarget.add(targetTimestamp);
+
+                    listTarget.add(targetTimestamp);
+
                 }
-               
-                
-                targetTimestamp= getMaxValue(listtarget);
-                
-                
+
+                targetTimestamp = getMaxValue(listTarget);
+
                 cSVWriter_data.flush();
                 cSVWriter_images_download.flush();
                 cSVWriter_videos_download.flush();
                 cSVWriter_links.flush();
                 cSVWriter_image_cloud.flush();
-                
+
                 String url = tagsRecents.getPagination().getNext_url();
 
                 if (url == null) {
-                    url = "https://api.instagram.com/v1/tags/" + tag + "?access_token=" + ACESS_TOKEN + "&min_id=" + tagsRecents.getPagination().getNext_min_id();
+                    url = "https://api.instagram.com/v1/" + service + "/" + search + "?access_token=" + ACESS_TOKEN + "&min_id=" + tagsRecents.getPagination().getNext_min_id();
                     break;
                 }
 
@@ -369,14 +420,13 @@ public class Teste {
                 tagsRecents = gerenciaGetTag.getTagsRecentsNEW(temptag);
 
             } catch (Exception e) {
+                e.printStackTrace();
             }
             i++;
 
-            //            System.out.print(currentTimestamp + " ");
-            System.out.print(targetTimestamp + " ");
-            System.out.println(timefinal);
-            System.out.println(" "+ i*20);
-            //            System.out.println((1.0 * (currentTimestamp - targetTimestamp) / (60)));
+            System.out.print("data atual: " + getDataLegivel(targetTimestamp, calendar, "dd-MM-yyyy - HH:mm:ss") + "\t");
+            System.out.println("data final: " + getDataLegivel(timefinal, calendar, "dd-MM-yyyy - HH:mm:ss") + " ");
+
 //        } while (currentTimestamp - targetTimestamp <= 60 * minutosAnalise);
 //        } while (targetTimestamp >= timefinal || (i * 20) > media_count);
         } while (targetTimestamp >= timefinal);
@@ -395,34 +445,35 @@ public class Teste {
 
         if (downloadimages) {
             new MetodosAdicionais()
-                    .download(directory +output +"_images_download.csv", "", imagesDir, delimiter);
+                    .download(imagesCsv, "", imagesDir, delimiter, "imagens");
         }
         if (downloadvideos) {
             new MetodosAdicionais()
-                    .download(directory + output +"_videos_download.csv", "", videosDir, delimiter);
+                    .download(videosCsv, "", videosDir, delimiter, "videos");
         }
 
     }
 
-    
-    
-    
-    
-    public static long getMaxValue(ArrayList<Long> listTarget){
+    private static String getDataLegivel(Long targetTimestamp, Calendar calendar, String format) {
+
+        calendar.setTimeInMillis(targetTimestamp);
+
+        Date date = new Date(targetTimestamp * 1000);
+        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy - HH-mm-ss");
+
+        return dateFormat.format(date);
+    }
+
+    public static long getMaxValue(ArrayList<Long> listTarget) {
         long maior = 0;
-        for(Long tempTarget:listTarget){
-            if(tempTarget>maior){
-                System.out.println(tempTarget);
+        for (Long tempTarget : listTarget) {
+            if (tempTarget > maior) {
                 maior = tempTarget;
             }
         }
         return maior;
     }
-    
-    
-    
-    
-    
+
     public static void getWindows() {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {

@@ -621,10 +621,10 @@ public class GerenciaGetTag {
         return data;
     }
 
-    public TagsRecents getTagsRecentsNEW(JSONObject jsonPage) {
+    public Recents getTagsRecentsNEW(JSONObject jsonPage) {
         
       
-        TagsRecents tagsRecents = new TagsRecents();
+        Recents tagsRecents = new Recents();
 //        System.out.println(jsonPage.toString());
           if (jsonPage.length()!=0){
            
@@ -656,8 +656,8 @@ public class GerenciaGetTag {
      * @param page
      * @return
      */
-    public TagsRecents separarObjetosJson(String page) {
-        TagsRecents returnSeparator = new TagsRecents();
+    public Recents separarObjetosJson(String page) {
+        Recents returnSeparator = new Recents();
         JSONObject page_all = new JSONObject(page);
         Pagination pagination = new Pagination();
         String pagination_names[] = null;

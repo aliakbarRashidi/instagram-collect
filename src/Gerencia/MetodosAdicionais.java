@@ -60,7 +60,7 @@ public class MetodosAdicionais {
 
                 in.close();
             } else {
-                
+
                 System.out.println("acesse: \n" + url_);
             }
 
@@ -143,24 +143,17 @@ public class MetodosAdicionais {
             byte[] buf = new byte[100000];
             int n = 0;
             int qnt = 0;
-            long timeSleep = 3;
-                        System.out.println("tempo dormindo: " + timeSleep + " segundos.");
-            try {
-                Thread.sleep(1000 * timeSleep);
-            } catch (InterruptedException ex) {
-                System.out.println("error ao dormir no download");
-            }
-                        
-            System.out.print(" tamanho: " + urrl.getContentLengthLong() / 1000.0 + "kb [");
+
+//            System.out.print(" tamanho: " + urrl.getContentLengthLong() / 1000.0 + "kb [");
             do {
                 n = in.read(buf);
                 qnt += n;
                 out.write(buf, 0, n);
                 out.flush();
-                System.out.print(" " + qnt * 100 / urrl.getContentLengthLong() + "% ");
+//                System.out.print(" " + qnt * 100 / urrl.getContentLengthLong() + "% ");
 
             } while (qnt < urrl.getContentLength());
-            System.out.println("]");
+//            System.out.println("]");
             in.close();
             out.close();
             //    System.out.println("} Foto  baixada com sucesso! Tamanho: ~"+urrl.getContentLengthLong()/1000+"kb\n");
@@ -191,7 +184,7 @@ public class MetodosAdicionais {
 
     }
 
-    public void download(String caminho_origem, String last_link, String caminho_destino, char separator) throws IOException {
+    public void download(String caminho_origem, String last_link, String caminho_destino, char separator, String tipo) throws IOException {
 
         Leitura leitura = new Leitura(caminho_origem);
         DecimalFormat df = new DecimalFormat();
@@ -199,14 +192,24 @@ public class MetodosAdicionais {
 
         int i = 0;
         int j;
-        System.out.println("Iniciando Download.");
+        System.out.println("Iniciando Download de \t" + tipo);
         int qnt = leitura.lista.size();
         for (j = 0; j < qnt; j++) {
+            if (j % 20 == 0 && j > 0) {
 
+                long timeSleep = 5;
+                System.out.println("progresso de  " +tipo+" "+ df.format(j * 100.0 / qnt) + "%");
+                System.out.println("tempo dormindo: " + timeSleep + " segundos.");
+                try {
+                    Thread.sleep(1000 * timeSleep);
+                } catch (InterruptedException ex) {
+                    System.out.println("error ao dormir no download");
+                }
+
+            }
             String col1 = "";
             String col2 = String.valueOf(i);
 
-            System.out.println("progresso: " + df.format(j * 100.0 / qnt) + "%");
             String tempLine = leitura.lista.get(i);
 
             String tempLineVector[] = tempLine.split(String.valueOf(separator));
@@ -229,6 +232,7 @@ public class MetodosAdicionais {
             String file = caminho_destino + col2 + "." + formato;
 
             if (!new File(file).exists()) {
+                System.out.println("Salvo em:\t " + file);
                 getImagem(file, col1);
             }
             i++;
@@ -239,8 +243,8 @@ public class MetodosAdicionais {
             qnt = 1;
             j = 1;
         }
-        System.out.println("progresso: " + df.format(j * 100.0 / qnt) + "%");
-        System.out.println("foram baixados: " + j + ".");
+        System.out.println("progresso de  " +tipo+" "+ df.format(j * 100.0 / qnt) + "% finalizado!");
+        System.out.println("foram baixados: " + j + " " + tipo + ".");
 
     }
 }

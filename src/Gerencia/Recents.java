@@ -14,7 +14,7 @@ import Data.Data;
  *
  * @author labic
  */
-public class TagsRecents {
+public class Recents {
     
   
   private Pagination pagination;
