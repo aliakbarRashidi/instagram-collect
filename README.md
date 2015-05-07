@@ -44,24 +44,19 @@ como usar:
 exemplos de pesquisa:
 
 	busca genérica:
-	
 	buscando a tag labic de agora até a data 1410691218  (http://www.unixtimestamp.com/ to convert) salvando no diretório  "/home/labic/downloads" habilitando o download das imagens e dos videos gerando um csv delimitado por vírgula
 ```sh
 java -jar Leticia.jar --tag labic  --time 1410691218  --directory "/home/labic/downloads" --downloadimages yes --downloadvideos yes  --delimiter ,
 ```
 
 	download através de um arquivo csv:
-	
 	baixar as imagens de uma tag aftersexy de um arquivo images_download.csv
-	
 ```sh
 java -jar Leticia.jar --tag aftersexy -f images_download.csv
 ```
 
 busca por location ID:
-
 	buscando o locationID  1671488 de agora até a data 1410691218  (http://www.unixtimestamp.com/ to convert) salvando no diretório  "/home/labic/downloads" habilitando o download das imagens e dos videos gerando um csv delimitado por vírgula
-	
 ```sh
 java -jar Leticia.jar --locationID 1671488  --time 1410691218  --directory "/home/labic/downloads" --downloadimages yes --downloadvideos yes  --delimiter ,
 ```
