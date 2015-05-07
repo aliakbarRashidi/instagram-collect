@@ -10,32 +10,32 @@ como usar:
 		
 ##Comandos
 
-- tag
+--tag
 
 	hashtag a ser buscada
 	- exemplo: --tag labic
 
-- time 
+--time 
 
 	o tempo final de pesquisa no formato timestamp
 	- exemplo: --time 1410691218
 
-- director
+--director
 
 	diretório de saídas dos arquivos
 	- exemplo: --directory "C:\\home\\labic\\downloads"
 
-- downloadimages 
+--downloadimages 
 
 	habilita a opção de baixar as imagens, o padrão é yes 
 	- exemplo: --downloadimages yes 
 
-- downloadvideos 
+--downloadvideos 
 
 	habilita a opção de baixar os videos, o padrão é yes
 	- exemplo: --downloadvideos no 
 
-- delimiter 
+--delimiter 
 
 	delimitador de texto para saida do arquivo, o padrão é ,
 	- exemplo: --delimiter ,
