@@ -10,41 +10,39 @@ como usar:
 		
 ##Comandos
 
---tag
+- tag
 
 	hashtag a ser buscada
 	- exemplo: --tag labic
 
---time 
+- time 
 
 	o tempo final de pesquisa no formato timestamp
 	- exemplo: --time 1410691218
 
---director
+- director
 
 	diretório de saídas dos arquivos
 	- exemplo: --directory "C:\\home\\labic\\downloads"
 
---downloadimages 
+- downloadimages 
 
 	habilita a opção de baixar as imagens, o padrão é yes 
 	- exemplo: --downloadimages yes 
 
---downloadvideos 
+- downloadvideos 
 
 	habilita a opção de baixar os videos, o padrão é yes
 	- exemplo: --downloadvideos no 
 
---delimiter 
+- delimiter 
 
 	delimitador de texto para saida do arquivo, o padrão é ,
 	- exemplo: --delimiter ,
 
 
 exemplos de pesquisa:
-
---busca genérica:
-
+- busca genérica:
 	buscando a tag labic de agora até a data 1410691218  (http://www.unixtimestamp.com/ to convert) salvando no diretório  "/home/labic/downloads" habilitando o download das imagens e dos videos gerando um csv delimitado por vírgula
 	
 ```sh
@@ -52,15 +50,12 @@ java -jar Leticia.jar --tag labic  --time 1410691218  --directory "/home/labic/d
 ```
 
 --download através de um arquivo csv:
-
 	baixar as imagens de uma tag aftersexy de um arquivo images_download.csv
 ```sh
 java -jar Leticia.jar --tag aftersexy -f images_download.csv
 ```
 
 --busca por location ID:
-
-
 	buscando o locationID  1671488 de agora até a data 1410691218  (http://www.unixtimestamp.com/ to convert) salvando no diretório  "/home/labic/downloads" habilitando o download das imagens e dos videos gerando um csv delimitado por vírgula
 ```sh
 java -jar Leticia.jar --locationID 1671488  --time 1410691218  --directory "/home/labic/downloads" --downloadimages yes --downloadvideos yes  --delimiter ,
