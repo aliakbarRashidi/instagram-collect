@@ -9,8 +9,11 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.text.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.HttpStatusException;
+import org.jsoup.Jsoup;
 
 /**
  *
@@ -85,19 +88,40 @@ public class Instagram {
 
     }
 
-    public JSONObject getRecentTag(String search, String min_id, String max_id, String service) {
+    public JSONObject getRecentTag(String search, String min_id, String max_id, String service) throws IOException {
 
         String url = "https://api.instagram.com/v1/" + service + "/" + search + "/media/recent?access_token=" + this.access_token + "&max_tag_id=" + max_id + "&min_tag_id=" + min_id;
+        String receive = "{}";
 
-        String receive = "";
+        org.jsoup.nodes.Document doc = null;
 
+//        try {
+//            receive = new MetodosAdicionais().getPage(url);
+//
+//        } catch (IOException ex) {
+//            Logger.getLogger(Instagram.class.getName()).log(Level.SEVERE, null, ex);
+//            System.out.println("NÃO CARREGOU A PAGINA. VERIFIQUE A CONEXÃO COM A INTERNET");
+//            System.exit(0);
+//        }
+        
         try {
-            receive = new MetodosAdicionais().getPage(url);
+            doc = Jsoup.connect(url)
+                    .ignoreContentType(true)
+                    .userAgent("Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0")
+                    .referrer("http://www.google.com")
+                    .get();
+        } catch (NullPointerException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (HttpStatusException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
-        } catch (IOException ex) {
-            Logger.getLogger(Instagram.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("NÃO CARREGOU A PAGINA. VERIFIQUE A CONEXÃO COM A INTERNET");
-            System.exit(0);
+        if (doc != null) {
+            receive = doc.text();
         }
 
         JSONObject jsonRecentTag = new JSONObject(receive);

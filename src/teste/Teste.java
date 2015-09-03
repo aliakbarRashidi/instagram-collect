@@ -9,6 +9,7 @@ package teste;
  *
  * @author andrei
  */
+import Data.Caption;
 import Data.Photo;
 import Gerencia.GerenciaGetTag;
 import Gerencia.Instagram;
@@ -16,13 +17,18 @@ import Gerencia.MetodosAdicionais;
 import Gerencia.Recents;
 import au.com.bytecode.opencsv.CSVWriter;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,15 +50,13 @@ public class Teste {
      * @param args the command line arguments
      * @throws java.io.IOException
      */
-    public static void main(String[] args) throws IOException {
+    public static void main_outra(String[] args) throws IOException {
 
 //        getWindows();
         //teste
 //        args = new String[]{"--tag", "aftersexy","-f", "images_download.csv"};
-//        args = new String[]{"--tag", "aftersexy", "--time", "1425879200", "--directory", "Pesquisa", "--downloadimages", "n", "--downloadvideos", "n"};
+        args = new String[]{"--tag", "labic", "--time", "1000", "--directory", "Pesquisa", "--downloadimages", "n", "--downloadvideos", "n"};
 //        args = new String[]{"--locationID", "1671488","--service", "locations", "--time", "1425254400", "--directory", "teste", "--downloadimages", "n", "--downloadvideos", "n"};
-
-        String printAll = "";
 
         //define os parametros que serão passados para ser chamado no programa. 
         //nessa primeira versão os valores são adicionados manualmentes. em breve serão lidos de um txt que servirá também de ajuda para entendimento desses parametros.
@@ -166,10 +170,6 @@ public class Teste {
 
         System.out.println("download file: " + downloadfile);
 
-        
-
-        int minutosAnalise = Integer.parseInt(minutos);
-
         /*
          cria uma mapa des configurações para acesso (autenticação) do instagram, deve conter um arquivo configurations.txt com os nomes CLIENT_ID, CLIENT_SECRET E ACESS_TOKEN com seus respectivos valores separados por ponto e virgula.
          */
@@ -187,10 +187,34 @@ public class Teste {
 
         //cria as pastas para armazenamento do csv, download das imagens e dos videos.
         String searchDir = directory + search + fileSeparator;
-
         String imagesDir = searchDir + "images" + fileSeparator;
         String videosDir = searchDir + "videos" + fileSeparator;
-        String csvDir = searchDir + "CSV de " + getDataLegivel(currentTimestamp, calendar, "dd-MM-yyyy - HH-mm-ss") + fileSeparator;
+        String csvDir = searchDir + "csv" + fileSeparator;
+
+        //cria os csv com os nomes
+        String principal_csv = csvDir + "principal.csv";
+        String links_csv = csvDir + "links.csv";
+        String images_csv = csvDir + "images_download.csv";
+        String videos_csv = csvDir + "videos_download.csv";
+        String image_cloud_csv = csvDir + "image_cloud.csv";
+
+        //checa se já tenha feito alguma pesquisa anterior e retorna o nome da pasta csv, caso não tenha, retorna ""
+        boolean check = checkIsExistingCsvDir(searchDir);
+
+        //se existe a pasta csv
+        if (check) {
+            principal_csv = csvDir + "principal_temp.csv";
+            links_csv = csvDir + "links_temp.csv";
+            images_csv = csvDir + "images_download_temp.csv";
+            videos_csv = csvDir + "videos_download_temp.csv";
+            image_cloud_csv = csvDir + "image_cloud_temp.csv";
+        }
+
+        String last_link = getLastLink(csvDir);
+        
+        
+        
+        System.out.println("last link:" + last_link);
 
         File pasta = new File(directory);
         if (!pasta.exists()) {
@@ -219,54 +243,50 @@ public class Teste {
             pasta.mkdir();
         }
 
-        
         //dá um print na tela com os respectivos diretórios.
         System.out.println("mainDir:    " + directory);
         System.out.println("imagesDir:  " + imagesDir);
         System.out.println("videosDir:  " + videosDir);
         System.out.println("csvDir:  " + csvDir);
 
-        String principalCsv = csvDir + "principal.csv";
-        String linksCsv = csvDir + "links.csv";
-        String imagesCsv = csvDir + "images_download.csv";
-        String videosCsv = csvDir + "videos_download.csv";
-        String imageCloudCsv = csvDir + "image_cloud.csv";
-
-        
         if (downloadfile.contains(".csv")) {
-            if (downloadfile.contains("videos")) {    
-                     new MetodosAdicionais()
-                    .download(downloadfile, "", videosDir, delimiter, "videos");
+            if (downloadfile.contains("videos")) {
+                new MetodosAdicionais()
+                        .download(downloadfile, "", videosDir, delimiter, "videos");
             }
             if (downloadfile.contains("images")) {
                 new MetodosAdicionais()
                         .download(downloadfile, "", imagesDir, delimiter, "imagens");
-            }    
-            
+            }
+
             System.exit(5);
         }
-        
+
         //cria os JSONOBJECTS para extrair as informações
-        JSONObject tagRecent = instagram.getRecentTag(search, "", "", service);
-        JSONObject Media_count = instagram.getMedia_Count(search, service);
-        JSONObject tempMedia_count = Media_count.getJSONObject("data");
+        JSONObject JSON_tagRecent = instagram.getRecentTag(search, "", "", service);
+        JSONObject JSON_media_count = instagram.getMedia_Count(search, service);
+        JSONObject JSON_tempMedia_count = JSON_media_count.getJSONObject("data");
+
+        if (check) {
+            JSON_tagRecent = new JSONObject(new MetodosAdicionais().getPage(last_link));
+        }
 
         //cria um objeto de tagrecents para controle das midias que estão vindo.
-        Recents tagsRecents = gerenciaGetTag.getTagsRecentsNEW(tagRecent);
+        Recents tags_recents = gerenciaGetTag.getTagsRecentsNEW(JSON_tagRecent);
 
         //código de error.    
-        int code = tagsRecents.getMeta().getCode();
-        String error_type = tagsRecents.getMeta().getError_type();
-        String error_message = tagsRecents.getMeta().getError_message();
+        int code = tags_recents.getMeta().getCode();
+        String error_type = tags_recents.getMeta().getError_type();
+        String error_message = tags_recents.getMeta().getError_message();
         System.out.println("error type:\t" + error_type);
         System.out.println("error message:\t" + error_message);
 
         //dá um print da busca pesquisada.
         System.out.println("code:\t" + code);
-        System.out.println("tag:\t" + tempMedia_count.getString("name"));
+        System.out.println("tag:\t" + JSON_tempMedia_count.getString("name"));
         int media_count = 0;
-        if (tempMedia_count.has("media_count")) {
-            media_count = tempMedia_count.getInt("media_count");
+        if (JSON_tempMedia_count.has("media_count")) {
+            media_count = JSON_tempMedia_count.getInt("media_count");
         }
         System.out.println("total media:    " + media_count);
 
@@ -280,11 +300,11 @@ public class Teste {
         //inicializa os CsvWriter com os path, delimitadores ..
         try {
 
-            cSVWriter_data = new CSVWriter(new FileWriter(new File(principalCsv)), delimiter, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER);
-            cSVWriter_links = new CSVWriter(new FileWriter(new File(linksCsv)), delimiter);
-            cSVWriter_images_download = new CSVWriter(new FileWriter(new File(imagesCsv)), delimiter);
-            cSVWriter_videos_download = new CSVWriter(new FileWriter(new File(videosCsv)), delimiter);
-            cSVWriter_image_cloud = new CSVWriter(new FileWriter(new File(imageCloudCsv)), delimiter);
+            cSVWriter_data = new CSVWriter(new FileWriter(new File(principal_csv)), delimiter, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER);
+            cSVWriter_links = new CSVWriter(new FileWriter(new File(links_csv)), delimiter, CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER);
+            cSVWriter_images_download = new CSVWriter(new FileWriter(new File(images_csv)), delimiter);
+            cSVWriter_videos_download = new CSVWriter(new FileWriter(new File(videos_csv)), delimiter);
+            cSVWriter_image_cloud = new CSVWriter(new FileWriter(new File(image_cloud_csv)), delimiter);
 
             String[] fistLine_image_cloud = {"imagem_name", "like", "time"};
             String[] fistLine = {"url", "user_username", "like", "link", "location_name", "location_id", "location_latitude", "location_longitude", "filter", "created_time", "user_profile_picture", "user_full_name", "user_id", "data_legivel", "caption", "comments"};
@@ -309,9 +329,12 @@ public class Teste {
         caracteresMalucos.add(String.valueOf("\t"));
         caracteresMalucos.add(String.valueOf("\r"));
         caracteresMalucos.add(String.valueOf("\b"));
+        caracteresMalucos.add(String.valueOf("\r\n"));
 
         do {
-            cSVWriter_links.writeNext(new String[]{tagsRecents.getPagination().getNext_url()});
+
+            cSVWriter_links.writeNext(new String[]{tags_recents.getPagination().getNext_url()});
+
             System.out.println("numero midias:" + i * 20);
             try {
                 if (code == 429) {
@@ -347,7 +370,7 @@ public class Teste {
                 //                System.out.println("progresso: " + (i * 100.0 / (sizeFor)) + "%");
                 ArrayList<Long> listTarget = new ArrayList<>();
 
-                for (Photo p : tagsRecents.getData().getPhoto()) {
+                for (Photo p : tags_recents.getData().getPhoto()) {
                     String tempUser = p.getUser().getUsername().toLowerCase();
 
                     if (usersblocks.contains(tempUser)) {
@@ -359,9 +382,9 @@ public class Teste {
                     targetTimestamp = Long.parseLong(p.getCreated_time());
 
                     if (p.getComments().getCount() > 0) {
-                        long last_targetTimestamp = Long.parseLong(p.getComments().getData().get(0).getCreated_time());
-
-                        targetTimestamp = last_targetTimestamp;
+                        if (p.getComments().getData().size() > 0) {
+                            targetTimestamp = Long.parseLong(p.getComments().getData().get(0).getCreated_time());
+                        }
 
                     }
 
@@ -370,11 +393,16 @@ public class Teste {
                     String comments = "";
                     for (int indexComments = 0; indexComments < p.getComments().getData().size(); indexComments++) {
 
-                        comments = comments + "[" + p.getComments().getData().get(indexComments).getText().replaceAll("\n", "") + "]";
+                        comments = comments + "[" + p.getComments().getData().get(indexComments).getText().replaceAll("(\\r\\n|\\n)", "<br />") + "]";
 
                     }
 
-                    String[] tempLine = {p.getImages().getLow_resolution().getUrl(), p.getUser().getUsername(), String.valueOf(p.getLikes().getCount()), p.getLink(), p.getLocation().getName(), p.getLocation().getId(), p.getLocation().getLatitude(), p.getLocation().getLongitude(), p.getFilter(), p.getCreated_time(), p.getUser().getProfile_picture(), tempUserFullName, p.getUser().getId(), dataLegivel, p.getCaption().getText(), comments};
+                    String caption = p.getCaption().getText();
+                    if (caption != null) {
+                        caption = caption.replaceAll("\n", "");
+                    }
+
+                    String[] tempLine = {p.getImages().getLow_resolution().getUrl(), p.getUser().getUsername(), String.valueOf(p.getLikes().getCount()), p.getLink(), p.getLocation().getName(), p.getLocation().getId(), p.getLocation().getLatitude(), p.getLocation().getLongitude(), p.getFilter(), p.getCreated_time(), p.getUser().getProfile_picture(), tempUserFullName, p.getUser().getId(), dataLegivel, caption, comments};
 
                     String[] tempLine_image_cloud = {p.getId() + ".jpg", String.valueOf(p.getLikes().getCount()), p.getCreated_time()};
 
@@ -400,24 +428,24 @@ public class Teste {
                 cSVWriter_links.flush();
                 cSVWriter_image_cloud.flush();
 
-                String url = tagsRecents.getPagination().getNext_url();
+                String url = tags_recents.getPagination().getNext_url();
 
                 if (url == null) {
-                    url = "https://api.instagram.com/v1/" + service + "/" + search + "?access_token=" + ACESS_TOKEN + "&min_id=" + tagsRecents.getPagination().getNext_min_id();
+                    url = "https://api.instagram.com/v1/" + service + "/" + search + "?access_token=" + ACESS_TOKEN + "&min_id=" + tags_recents.getPagination().getNext_min_id();
                     break;
                 }
 
-                JSONObject temptag = new JSONObject();
+                JSONObject temptag = new JSONObject("{}");
 
                 try {
                     //                    System.out.println(url);
                     temptag = new JSONObject(new MetodosAdicionais().getPage(url));
                 } catch (IOException ex) {
 
-                    System.err.println("erro");
+                    System.err.println("JSON" + url + "vazio");
                 }
 
-                tagsRecents = gerenciaGetTag.getTagsRecentsNEW(temptag);
+                tags_recents = gerenciaGetTag.getTagsRecentsNEW(temptag);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -445,13 +473,91 @@ public class Teste {
 
         if (downloadimages) {
             new MetodosAdicionais()
-                    .download(imagesCsv, "", imagesDir, delimiter, "imagens");
+                    .download(images_csv, "", imagesDir, delimiter, "imagens");
         }
         if (downloadvideos) {
             new MetodosAdicionais()
-                    .download(videosCsv, "", videosDir, delimiter, "videos");
+                    .download(videos_csv, "", videosDir, delimiter, "videos");
         }
 
+    }
+
+    public static void join_csv_with_temp(String csvDir) {
+
+        File path = new File(csvDir);
+        FilenameFilter textFilter = new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                String lowercaseName = name.toLowerCase();
+                return (lowercaseName.startsWith("principal"));
+            }
+        };
+        File[] files = path.listFiles(textFilter);
+        String filename_output = "principal.csv";
+        File output = new File(filename_output);
+        
+        mergeFiles(files, output);
+        
+        
+       
+
+    }
+    
+    	public static void mergeFiles(File[] files, File mergedFile) {
+ 
+		FileWriter fstream = null;
+		BufferedWriter out = null;
+		try {
+			fstream = new FileWriter(mergedFile, true);
+			 out = new BufferedWriter(fstream);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+ 
+		for (File f : files) {
+			System.out.println("merging: " + f.getName());
+			FileInputStream fis;
+			try {
+				fis = new FileInputStream(f);
+				BufferedReader in = new BufferedReader(new InputStreamReader(fis));
+ 
+				String aLine;
+				while ((aLine = in.readLine()) != null) {
+					out.write(aLine);
+					out.newLine();
+				}
+ 
+				in.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+ 
+		try {
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+ 
+	}
+
+    public static boolean checkIsExistingCsvDir(String searchDir) {
+
+        boolean check = false;
+        File path = new File(searchDir);
+        FilenameFilter textFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                String lowercaseName = name.toLowerCase();
+                return lowercaseName.startsWith("csv");
+            }
+        };
+        File[] files = path.listFiles(textFilter);
+        for (File file : files) {
+            if (file.isDirectory()) {
+                check = true;
+            }
+        }
+        return check;
     }
 
     private static String getDataLegivel(Long targetTimestamp, Calendar calendar, String format) {
@@ -516,16 +622,19 @@ public class Teste {
 
                 String linha = br.readLine().toLowerCase();
 
-                String colunas[] = linha.split(";");
-
+                String colunas[] = linha.split(";");                
+                if (colunas.length >1){
                 tempConfigurations.put(colunas[0].toUpperCase(), colunas[1]);
-
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("Arquivo configurations.txt não está presente ou não está no padrão.\nTente: \nCLIENT_ID;9cd1f78e9e424b109489a9efc87c1638\n"
-                    + "\nCLIENT_SECRET;9894688d6b344b0e90ef9c887135abd8\n"
-                    + "\naccess_token;144397518.1fb235f.b81ed940c95245d7995ef661f0618afe");
+            System.out.println(""
+                    + "Arquivo configurations.txt não está presente ou não está no padrão.\n"
+                    + "Tente: \n"
+                    + "CLIENT_ID;9cd1f78e9e424b109489a9efc87c1638\n"
+                    + "CLIENT_SECRET;9894688d6b344b0e90ef9c887135abd8\n"
+                    + "access_token;144397518.1fb235f.b81ed940c95245d7995ef661f0618afe");
         }
 
         return tempConfigurations;
@@ -584,4 +693,27 @@ public class Teste {
         }
 
     }
+
+    //você parou aqui, como append in csv existente.
+    private static String getLastLink(String csvDir) {
+        String last_link = "";
+        
+        File arquivo = new File(csvDir + "links_temp.csv");
+       
+        try {
+            FileReader MeuArquivo = new FileReader(arquivo);
+            BufferedReader br = new BufferedReader(MeuArquivo);
+
+            while (br.ready()) {
+                
+                last_link = br.readLine();
+                System.out.println(last_link);
+            }
+        } catch (IOException e) {
+            
+            System.err.print("file " + csvDir + " not exist.");
+        }
+        return last_link;
+    }
+
 }

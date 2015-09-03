@@ -415,12 +415,13 @@ public class GerenciaGetTag {
                 }
 
                 if (arg_low_resolution_video != -1) {
-                    JSONObject images_low_resolution = new JSONObject(data_videos_values[arg_low_resolution_video]);
+                    if (data_videos_values[arg_low_resolution_video] != null){
+                     JSONObject images_low_resolution = new JSONObject(data_videos_values[arg_low_resolution_video]);
 
                     String images_low_resolution_names[] = {"height", "width", "url"};
                     String images_low_resolution_values[] = getValues(images_low_resolution_names, images_low_resolution);
                     low_resolution_video.setLow_resolution(images_low_resolution_names, images_low_resolution_values);
-
+                    }
                 }
 
                 if (arg_standard_resolution_video != -1) {
